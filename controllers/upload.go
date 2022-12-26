@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"time"
+	"zestream-server/constants"
 )
 
 func UploadFile(c *gin.Context) {
@@ -28,6 +29,7 @@ func UploadFile(c *gin.Context) {
 		return
 	}
 
+	// Convert Bytes into a File Object acceptable by s3.PutObjectInput
 	defer fileBytes.Close()
 	fileData, err := ioutil.ReadAll(fileBytes)
 	if err != nil {
@@ -37,7 +39,7 @@ func UploadFile(c *gin.Context) {
 
 	input := &s3.PutObjectInput{
 		Body:   bytes.NewReader(fileData),
-		Bucket: aws.String("my-bucket"),
+		Bucket: aws.String(constants.S3_BUCKET_NAME),
 		Key:    aws.String(file.Filename),
 	}
 
@@ -50,7 +52,7 @@ func UploadFile(c *gin.Context) {
 
 	// Get presigned URL for the uploaded file
 	req, _ := svc.GetObjectRequest(&s3.GetObjectInput{
-		Bucket: aws.String("my-bucket"),
+		Bucket: aws.String(constants.S3_BUCKET_NAME),
 		Key:    aws.String(file.Filename),
 	})
 
@@ -71,8 +73,8 @@ func GeneratePresignedURL(c *gin.Context) {
 
 	//The GetObjectRequest function is used to create a request for the S3 object for which presigned URL is to be generated
 	req, _ := svc.GetObjectRequest(&s3.GetObjectInput{
-		Bucket: aws.String("my-bucket"),
-		Key:    aws.String("my-object-key"),
+		Bucket: aws.String(constants.S3_BUCKET_NAME),
+		Key:    aws.String("file-name"),
 	})
 
 	urlStr, err := req.Presign(60 * time.Minute)
