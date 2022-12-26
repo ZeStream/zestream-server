@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"strings"
 	"zestream/constants"
 )
 
@@ -33,6 +34,9 @@ func GetOutputFilePathName(fileName string, postfix string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
+	// TODO: replace filename with id
+	fileName = strings.Replace(fileName, ".", "_", 1)
 
 	pathName := path.Join(cwd, constants.OUTPUT_FILE_PATH_PREFIX, fileName)
 

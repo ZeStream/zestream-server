@@ -2,11 +2,10 @@ package main
 
 import (
 	"zestream/service"
-	"zestream/utils"
 )
 
 func dev() {
-	utils.Fetch("https://file-examples.com/storage/fe332cf53a63a4bd5991eb4/2017/04/file_example_MP4_480_1_5MG.mp4", "earth.mp4")
+	// utils.Fetch("https://file-examples.com/storage/fe332cf53a63a4bd5991eb4/2017/04/file_example_MP4_480_1_5MG.mp4", "earth.mp4")
 	service.GenerateDash("www.mp4")
 }
 
