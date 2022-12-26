@@ -1,35 +1,39 @@
 package main
 
 import (
-	"fmt"
-	"net/http"
-	"os"
-	"zestream/constants"
-	"zestream/routes"
-
-	"github.com/joho/godotenv"
+	"zestream/service"
+	"zestream/utils"
 )
 
+func dev() {
+	utils.Fetch("https://file-examples.com/storage/fe332cf53a63a4bd5991eb4/2017/04/file_example_MP4_480_1_5MG.mp4", "earth.mp4")
+	service.GenerateDash("www.mp4")
+}
+
 func main() {
-	e := godotenv.Load()
 
-	if e != nil {
-		fmt.Print(e)
-	}
+	dev()
 
-	r := routes.Init()
+	// e := godotenv.Load()
 
-	port := os.Getenv(constants.PORT)
+	// if e != nil {
+	// 	fmt.Print(e)
+	// }
 
-	if port == "" {
-		port = constants.DEFAULT_PORT
-	}
+	// r := routes.Init()
 
-	err := http.ListenAndServe(port, nil)
+	// port := os.Getenv(constants.PORT)
 
-	if err != nil {
-		fmt.Println(err)
-	}
+	// if port == "" {
+	// 	port = constants.DEFAULT_PORT
+	// }
 
-	r.Run(":" + port)
+	// err := http.ListenAndServe(port, nil)
+
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+
+	// r.Run(":" + port)
+
 }
