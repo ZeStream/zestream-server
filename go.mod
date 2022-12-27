@@ -3,12 +3,12 @@ module zestream-server
 go 1.19
 
 require (
+	github.com/aws/aws-sdk-go v1.44.167
 	github.com/gin-gonic/gin v1.8.2
 	github.com/joho/godotenv v1.4.0
 )
 
 require (
-	github.com/aws/aws-sdk-go v1.44.167 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-playground/locales v0.14.0 // indirect
 	github.com/go-playground/universal-translator v0.18.0 // indirect

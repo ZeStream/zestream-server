@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"zestream/constants"
-	"zestream/routes"
+	"zestream-server/constants"
+	"zestream-server/routes"
 
 	"github.com/joho/godotenv"
 )
