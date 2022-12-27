@@ -43,6 +43,6 @@ func PublishMessage(c *gin.Context) {
 		c.JSON(http.StatusCreated, gin.H{"status": "success"})
 		return
 	} else {
-		c.JSON(http.StatusExpectationFailed, gin.H{"status": "fail"})
+		c.JSON(http.StatusExpectationFailed, gin.H{"error": message})
 	}
 }
