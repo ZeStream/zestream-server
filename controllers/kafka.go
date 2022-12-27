@@ -3,7 +3,6 @@ package controllers
 import (
 	"encoding/json"
 	"net/http"
-	"os"
 	"zestream/utils"
 
 	"github.com/gin-gonic/gin"
@@ -39,7 +38,7 @@ func PublishMessage(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	var message = utils.PublishMessage(os.Getenv("KAFKA_URI"), string(jsonBytes), "video")
+	var message = utils.PublishMessage(utils.Config["KAFKA_URI"], string(jsonBytes), "video")
 	if message {
 		c.JSON(http.StatusCreated, gin.H{"status": "success"})
 		return

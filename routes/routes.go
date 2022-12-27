@@ -30,7 +30,7 @@ func Init() *gin.Engine {
 
 	v1.POST("process-video", controllers.ProcessVideo)
 
-	v1.POST("publish-message-kafka", controllers.PublishMessage)
+	v1.POST("register_video_process", controllers.PublishMessage)
 
 	return r
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"zestream/constants"
@@ -21,11 +22,9 @@ func main() {
 
 	port := os.Getenv(constants.PORT)
 
-	kafkaUriVal, isKafkaUriSet := os.LookupEnv("KAFKA_URI")
-	if isKafkaUriSet == true && kafkaUriVal != "" {
-		kafkaUri := os.Getenv(constants.KAFKA_URI)
-	} else {
-		fmt.Println("Kafka URI is not set")
+	kafkaURI := os.Getenv("KAFKA_URI")
+	if kafkaURI == "" {
+		log.Fatal("Error: KAFKA_URI environment variable not set")
 	}
 
 	if port == "" {
