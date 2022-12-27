@@ -28,12 +28,11 @@ func GenerateDash(fileName string) {
 
 	var wg sync.WaitGroup
 
-	// wg.Add(len(constants.AudioFileTypeMap)+ len(constants.VideoFileTypeMap))
-	wg.Add(len(constants.AudioFileTypeMap))
+	wg.Add(len(constants.AudioFileTypeMap) + len(constants.VideoFileTypeMap))
 
 	generateAudioFiles(fileName, targetFile, outputPath, &wg)
 
-	// generateVideoFiles(fileName, targetFile, outputPath, &wg)
+	generateVideoFiles(fileName, targetFile, outputPath, &wg)
 
 	wg.Wait()
 

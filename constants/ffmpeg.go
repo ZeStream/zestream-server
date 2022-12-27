@@ -92,7 +92,7 @@ var FFmpegConfig = map[KWARGS]string{
 	AudioCodec:     "aac",
 	// TODO: add support for different encoders
 	// https://stackoverflow.com/a/50703794
-	VideoCodec:         "h264_videotoolbox",
+	VideoCodec:         "libx264",
 	ConstantRateFactor: "23",
 	AllowSoftEncoding:  "1",
 	VideoFormat:        "mp4",
