@@ -38,8 +38,8 @@ func PublishMessage(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	var message = utils.PublishMessage(utils.Config["KAFKA_URI"], string(jsonBytes), "video")
-	if message {
+	message := utils.PublishMessage(utils.Config["KAFKA_URI"], string(jsonBytes), "video")
+	if message != "success" {
 		c.JSON(http.StatusCreated, gin.H{"status": "success"})
 		return
 	} else {

@@ -8,7 +8,7 @@ import (
 	"github.com/segmentio/kafka-go"
 )
 
-func PublishMessage(kafkaURI, topic string, message string) bool {
+func PublishMessage(kafkaURI, topic string, message string) string {
 
 	partition := 0
 
@@ -23,13 +23,13 @@ func PublishMessage(kafkaURI, topic string, message string) bool {
 	)
 	if err != nil {
 		log.Fatal("failed to write messages:", err)
-		return false
+		return err.Error()
 	}
 
 	if err := conn.Close(); err != nil {
 		log.Fatal("failed to close writer:", err)
-		return false
+		return err.Error()
 	}
 
-	return true
+	return "success"
 }
