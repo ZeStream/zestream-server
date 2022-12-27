@@ -5,7 +5,7 @@ To build image run following command:
 
 To run an image, type following:
 
-     docker run -p 3000:3000 go-dock
+     docker run -p 8080:8080 go-dock
 
 
 
