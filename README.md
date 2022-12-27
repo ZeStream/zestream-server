@@ -33,4 +33,4 @@ You want to implement the similar feature in your own product, without any hassl
 
 ## How to contribute?
 
-Follow contribution guidelines
+Check out [contribution guidelines](https://github.com/ZeStream/zestream-server/blob/main/CONTRIBUTING.md)
