@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 	"zestream/constants"
 )
@@ -62,4 +63,8 @@ func createDirPath(pathName string) error {
 	}
 
 	return nil
+}
+
+func RemoveExtensionFromFile(fileName string) string {
+	return strings.TrimSuffix(fileName, filepath.Ext(fileName))
 }
