@@ -8,15 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-/*
-	{
-	  "video": {
-	    "id": "string",
-	    "src": "string",
-	    "type": "mp4"
-	  }
-	}
-*/
 type Video struct {
 	ID   string `json:"id"`
 	Src  string `json:"src"`
