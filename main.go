@@ -5,19 +5,20 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"zestream/configs"
 	"zestream/constants"
 	"zestream/routes"
-
-	"github.com/joho/godotenv"
+	"zestream/service"
+	"zestream/utils"
 )
 
+func dev() {
+	utils.Fetch("https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WeAreGoingOnBullrun.mp4", "Test.mp4")
+	service.GenerateDash("Test.mp4")
+}
+
 func main() {
-
-	e := godotenv.Load()
-
-	if e != nil {
-		fmt.Print(e)
-	}
+	configs.LoadEnv()
 
 	r := routes.Init()
 

@@ -1,9 +1,11 @@
 package service
 
 import (
+	"bytes"
 	"log"
+	"os/exec"
+	"strings"
 	"sync"
-	"time"
 	"zestream/constants"
 	"zestream/utils"
 
@@ -24,20 +26,17 @@ func GenerateDash(fileName string) {
 		return
 	}
 
-	start := time.Now()
-
 	var wg sync.WaitGroup
 
 	wg.Add(len(constants.AudioFileTypeMap) + len(constants.VideoFileTypeMap))
 
-	generateAudioFiles(fileName, targetFile, outputPath, &wg)
+	go generateAudioFiles(fileName, targetFile, outputPath, &wg)
 
-	generateVideoFiles(fileName, targetFile, outputPath, &wg)
+	go generateVideoFiles(fileName, targetFile, outputPath, &wg)
 
 	wg.Wait()
 
-	log.Printf("main, execution time %s\n", time.Since(start))
-
+	generateMPD(outputPath)
 }
 
 func generateAudioFiles(fileName string, targetFile string, outputPath string, wg *sync.WaitGroup) {
@@ -46,7 +45,6 @@ func generateAudioFiles(fileName string, targetFile string, outputPath string, w
 
 		go generateCappedBitrateAudio(targetFile, outputFile, fileType, wg)
 	}
-
 }
 
 func generateVideoFiles(fileName string, targetFile string, outputPath string, wg *sync.WaitGroup) {
@@ -89,4 +87,47 @@ func generateCappedBitrateVideo(targetFile string, outputFile string, fileType c
 		Run()
 
 	wg.Done()
+}
+
+func generateMPD(outputPath string) {
+	var fileArgs bytes.Buffer
+
+	mergePathToString(&fileArgs, outputPath, constants.AudioFileTypeMap)
+	mergePathToString(&fileArgs, outputPath, constants.VideoFileTypeMap)
+
+	var filePaths = strings.TrimSuffix(fileArgs.String(), " ")
+
+	var inputArgsMap = map[string]string{
+		constants.Mp4BoxArgs[constants.Dash]:        constants.Mp4BoxConfig[constants.Dash],
+		constants.Mp4BoxArgs[constants.Rap]:         constants.Mp4BoxConfig[constants.Rap],
+		constants.Mp4BoxArgs[constants.FragRap]:     constants.Mp4BoxConfig[constants.FragRap],
+		constants.Mp4BoxArgs[constants.BsSwitching]: constants.Mp4BoxConfig[constants.BsSwitching],
+		constants.Mp4BoxArgs[constants.Profile]:     constants.Mp4BoxConfig[constants.Profile],
+		constants.Mp4BoxArgs[constants.Out]:         outputPath + constants.DashOutputExt,
+	}
+
+	inputArgsStr := utils.StringToArgsGenerator(inputArgsMap)
+
+	var argsArr = strings.Split(inputArgsStr+filePaths, " ")
+
+	cmd := exec.Command(constants.MP4Box, argsArr...)
+
+	o, err := cmd.CombinedOutput()
+
+	utils.DeleteFiles(filePaths)
+
+	if err != nil {
+		log.Println(err)
+	}
+
+	log.Println(string(o))
+}
+
+func mergePathToString(fileArgs *bytes.Buffer, outputPath string, fileTypes map[constants.FILE_TYPE]string) {
+	for _, filePrefix := range fileTypes {
+		var outputFile = outputPath + filePrefix
+		if utils.IsFileValid(outputFile) {
+			fileArgs.WriteString(utils.WrapStringInQuotes(outputFile))
+		}
+	}
 }

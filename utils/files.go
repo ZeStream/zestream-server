@@ -1,8 +1,11 @@
 package utils
 
 import (
-	"fmt"
+	"bytes"
+	"errors"
+	"log"
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
 	"strings"
@@ -43,8 +46,6 @@ func GetOutputFilePathName(fileName string, postfix string) (string, error) {
 
 	err = createDirPath(pathName)
 
-	fmt.Println(pathName)
-
 	if err != nil {
 		return "", err
 	}
@@ -67,4 +68,44 @@ func createDirPath(pathName string) error {
 
 func RemoveExtensionFromFile(fileName string) string {
 	return strings.TrimSuffix(fileName, filepath.Ext(fileName))
+}
+
+func IsFileValid(filePath string) bool {
+	if _, err := os.Stat(filePath); errors.Is(err, os.ErrNotExist) {
+		return false
+	}
+	return true
+}
+
+func WrapStringInQuotes(str string) string {
+	var buff bytes.Buffer
+
+	buff.WriteString(str)
+	buff.WriteString(" ")
+
+	return buff.String()
+}
+
+func StringToArgsGenerator(args map[string]string) string {
+	var argsStr bytes.Buffer
+
+	for k, v := range args {
+		argsStr.WriteString("-")
+		argsStr.WriteString(k + " ")
+		argsStr.WriteString(v)
+
+		if v != "" {
+			argsStr.WriteString(" ")
+		}
+	}
+
+	return argsStr.String()
+}
+
+func DeleteFiles(filePaths string) {
+	_, err := exec.Command("rm", strings.Split(filePaths, " ")...).Output()
+
+	if err != nil {
+		log.Println(err)
+	}
 }

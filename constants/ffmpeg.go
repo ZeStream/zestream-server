@@ -11,10 +11,10 @@ const (
 	Video400K
 )
 
-type KWARGS int
+type FFMPEG_KWARGS int
 
 const (
-	Preset KWARGS = iota
+	Preset FFMPEG_KWARGS = iota
 	Tune
 	FpsMode
 	AudioExclusion
@@ -29,6 +29,20 @@ const (
 	VideoFormat
 	HWAccel
 )
+
+type MP4BOX_ARGS int
+
+const (
+	Dash MP4BOX_ARGS = iota
+	Rap
+	FragRap
+	BsSwitching
+	Profile
+	Out
+)
+
+const DashOutputExt = ".mpd"
+const MP4Box = "MP4Box"
 
 var AudioFileTypeMap = map[FILE_TYPE]string{
 	Audio192K: "_audio192k.m4a",
@@ -62,7 +76,7 @@ var VideoBufferSizeMap = map[FILE_TYPE]string{
 	Video400K: "1000k",
 }
 
-var VideoKwargs = map[KWARGS]string{
+var VideoKwargs = map[FFMPEG_KWARGS]string{
 	Preset:             "preset",
 	Tune:               "tune",
 	FpsMode:            "fps_mode",
@@ -75,7 +89,7 @@ var VideoKwargs = map[KWARGS]string{
 	HWAccel:            "hwaccel",
 }
 
-var AudioKwargs = map[KWARGS]string{
+var AudioKwargs = map[FFMPEG_KWARGS]string{
 	AudioCodec:        "c:a",
 	AudioBitrate:      "b:a",
 	AllowSoftEncoding: "allow_sw",
@@ -83,7 +97,7 @@ var AudioKwargs = map[KWARGS]string{
 	HWAccel:           "hwaccel",
 }
 
-var FFmpegConfig = map[KWARGS]string{
+var FFmpegConfig = map[FFMPEG_KWARGS]string{
 	Preset:         "fast",
 	Tune:           "film",
 	FpsMode:        "passthrough",
@@ -97,4 +111,21 @@ var FFmpegConfig = map[KWARGS]string{
 	AllowSoftEncoding:  "1",
 	VideoFormat:        "mp4",
 	HWAccel:            "auto",
+}
+
+var Mp4BoxArgs = map[MP4BOX_ARGS]string{
+	Dash:        "dash",
+	Rap:         "rap",
+	FragRap:     "frag-rap",
+	BsSwitching: "bs-switching",
+	Profile:     "profile",
+	Out:         "out",
+}
+
+var Mp4BoxConfig = map[MP4BOX_ARGS]string{
+	Dash:        "10000",
+	Rap:         "",
+	FragRap:     "",
+	BsSwitching: "no",
+	Profile:     "dashavc264:live",
 }
