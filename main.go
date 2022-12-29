@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"zestream/constants"
@@ -21,6 +22,11 @@ func main() {
 	r := routes.Init()
 
 	port := os.Getenv(constants.PORT)
+
+	kafkaURI := os.Getenv("KAFKA_URI")
+	if kafkaURI == "" {
+		log.Fatal("Error: KAFKA_URI environment variable not set")
+	}
 
 	if port == "" {
 		port = constants.DEFAULT_PORT
