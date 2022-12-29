@@ -12,6 +12,7 @@ import (
 )
 
 func main() {
+
 	e := godotenv.Load()
 
 	if e != nil {
