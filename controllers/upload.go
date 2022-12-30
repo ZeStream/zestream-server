@@ -43,5 +43,5 @@ func GeneratePresignedURL(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"pre-signed URL": urlStr, "videoID": videoID})
+	c.JSON(http.StatusOK, gin.H{"preSignedURL": urlStr, "videoID": videoID})
 }
