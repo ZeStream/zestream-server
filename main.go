@@ -5,10 +5,11 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"zestream-server/configs"
 	"zestream-server/constants"
 	"zestream-server/routes"
-
-	"github.com/joho/godotenv"
+	"zestream-server/service"
+	"zestream-server/utils"
 )
 
 func dev() {

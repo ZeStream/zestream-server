@@ -6,8 +6,8 @@ import (
 	"os/exec"
 	"strings"
 	"sync"
-	"zestream/constants"
-	"zestream/utils"
+	"zestream-server/constants"
+	"zestream-server/utils"
 
 	ffmpeg "github.com/u2takey/ffmpeg-go"
 )

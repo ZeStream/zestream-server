@@ -9,7 +9,7 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
-	"zestream/constants"
+	"zestream-server/constants"
 )
 
 func GetDownloadFilePathName(fileName string) (string, error) {

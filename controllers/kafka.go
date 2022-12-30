@@ -3,8 +3,8 @@ package controllers
 import (
 	"encoding/json"
 	"net/http"
-	"zestream/configs"
-	"zestream/utils"
+	"zestream-server/configs"
+	"zestream-server/utils"
 
 	"github.com/gin-gonic/gin"
 )
