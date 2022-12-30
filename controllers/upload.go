@@ -6,28 +6,30 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"path/filepath"
 	"zestream-server/constants"
-	"zestream-server/types"
 	"zestream-server/utils"
 )
 
 func GeneratePresignedURL(c *gin.Context) {
 
-	// Validate the incoming request
-	var request types.GenerateURLRequest
-	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Incorrect request parameters", "details": err.Error()})
+	// Obtain the file name and extension from query params
+	fileName := c.Query("fileName")
+	extension := filepath.Ext(fileName)
+
+	if fileName == "" || extension == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing required query parameter 'fileName' or 'fileName' provided without any extension"})
 		return
 	}
+
+	// Generate a New Video ID
+	videoID := utils.VideoIDGen(extension)
 
 	// Create a new session
 	sess, _ := session.NewSession(&aws.Config{
 		Region: aws.String(constants.S3_REGION),
 	})
 	svc := s3.New(sess)
-
-	// Generate a New Video ID
-	videoID := utils.VideoIDGen(request.FileName)
 
 	// Create a PutObjectRequest with the necessary parameters
 	req, _ := svc.PutObjectRequest(&s3.PutObjectInput{
