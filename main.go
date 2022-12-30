@@ -5,11 +5,11 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"zestream/configs"
-	"zestream/constants"
-	"zestream/routes"
-	"zestream/service"
-	"zestream/utils"
+	"zestream-server/configs"
+	"zestream-server/constants"
+	"zestream-server/routes"
+	"zestream-server/service"
+	"zestream-server/utils"
 )
 
 func dev() {

@@ -1,9 +1,8 @@
 package routes
 
 import (
-	"zestream/controllers"
-
 	"github.com/gin-gonic/gin"
+	"zestream-server/controllers"
 )
 
 // Init function will perform all route operations
@@ -30,6 +29,7 @@ func Init() *gin.Engine {
 
 	v1.POST("process-video", controllers.ProcessVideo)
 
+	v1.GET("generate-presigned-url", controllers.GeneratePresignedURL)
 	v1.POST("register_video_process", controllers.PublishMessage)
 
 	return r
