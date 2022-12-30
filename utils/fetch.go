@@ -7,7 +7,7 @@ import (
 	"os"
 	"path"
 	"strconv"
-	"zestream/constants"
+	"zestream-server/constants"
 )
 
 func Fetch(url string, fileName string) error {

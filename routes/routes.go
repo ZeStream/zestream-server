@@ -31,7 +31,5 @@ func Init() *gin.Engine {
 
 	v1.GET("generate-presigned-url", controllers.GeneratePresignedURL)
 
-	v1.POST("upload", controllers.UploadFile)
-
 	return r
 }

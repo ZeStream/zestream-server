@@ -1,6 +1,8 @@
 package constants
 
-import "time"
+import (
+	"time"
+)
 
 const PORT = "PORT"
 const DEFAULT_PORT = "8080"
