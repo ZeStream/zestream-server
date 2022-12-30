@@ -5,13 +5,12 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"path"
 	"strconv"
 	"zestream-server/constants"
 )
 
 func Fetch(url string, fileName string) error {
-	newFileName, err := getFileName(fileName)
+	newFileName, err := GetDownloadFilePathName(fileName)
 	if err != nil {
 		return err
 	}
@@ -42,24 +41,4 @@ func Fetch(url string, fileName string) error {
 	}
 
 	return nil
-}
-
-func getFileName(fileName string) (string, error) {
-	cwd, err := os.Getwd()
-
-	if err != nil {
-		return "", err
-	}
-
-	newPath := path.Join(cwd, constants.DOWNLOAD_FILE_PATH_PREFIX)
-
-	err = os.MkdirAll(newPath, os.ModePerm)
-
-	if err != nil {
-		return "", err
-	}
-
-	newPath = path.Join(newPath, fileName)
-
-	return newPath, nil
 }
