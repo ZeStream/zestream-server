@@ -7,9 +7,13 @@ import (
 	"os"
 	"zestream-server/configs"
 	"zestream-server/constants"
+	"zestream-server/docs"
 	"zestream-server/routes"
 	"zestream-server/service"
 	"zestream-server/utils"
+
+	swaggerFiles "github.com/swaggo/files"     // swagger embed files
+	ginSwagger "github.com/swaggo/gin-swagger" // gin-swagger middleware
 )
 
 func dev() {
@@ -19,18 +23,25 @@ func dev() {
 
 func main() {
 	configs.LoadEnv()
+	port := os.Getenv(constants.PORT)
+
+	if port == "" {
+		port = constants.DEFAULT_PORT
+	}
+
+	// Swagger 2.0 Meta Information
+	docs.SwaggerInfo.Title = "ZeStream - An adaptive video streaming server"
+	docs.SwaggerInfo.Description = "ZeStream is the backend service which you can self-deploy, and use its API to process the video and store it on a storage bucket like AWS S3/Google Cloud/Azure...."
+	docs.SwaggerInfo.Version = "1.0"
+	docs.SwaggerInfo.Host = ":" + port
+	docs.SwaggerInfo.BasePath = "/api/v1"
+	docs.SwaggerInfo.Schemes = []string{"https"}
 
 	r := routes.Init()
-
-	port := os.Getenv(constants.PORT)
 
 	kafkaURI := os.Getenv("KAFKA_URI")
 	if kafkaURI == "" {
 		log.Fatal("Error: KAFKA_URI environment variable not set")
-	}
-
-	if port == "" {
-		port = constants.DEFAULT_PORT
 	}
 
 	err := http.ListenAndServe(port, nil)
@@ -38,6 +49,8 @@ func main() {
 	if err != nil {
 		fmt.Println(err)
 	}
+
+	r.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	r.Run(":" + port)
 }

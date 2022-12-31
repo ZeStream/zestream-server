@@ -1,8 +1,9 @@
 package routes
 
 import (
-	"github.com/gin-gonic/gin"
 	"zestream-server/controllers"
+
+	"github.com/gin-gonic/gin"
 )
 
 // Init function will perform all route operations
