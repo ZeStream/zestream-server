@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"fmt"
-	"zestream/constants"
+	"net/http"
 	"zestream/helpers"
 
 	"github.com/gin-gonic/gin"
@@ -10,5 +10,8 @@ import (
 
 func ProcessVideo(c *gin.Context) {
 	fmt.Println("Do Something")
-	c.JSON(constants.StatusOK, helpers.ResponseSchema(gin.H{}, helpers.CreateSuccessResponse("signedURL", "2415"), constants.StatusOK))
+	c.JSON(
+		http.StatusOK,
+		helpers.ResponseSchema(gin.H{}, helpers.CreateSuccessResponse("signedURL", "2415"),
+			http.StatusOK))
 }

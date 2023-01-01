@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"errors"
+	"net/http"
 	"zestream/constants"
 	"zestream/helpers"
 
@@ -9,9 +11,9 @@ import (
 
 func Ping(c *gin.Context) {
 	c.JSON(
-		constants.StatusOK,
+		http.StatusBadRequest,
 		helpers.ResponseSchema(
+			helpers.CreateErrorResponse(constants.StatusTexts[http.StatusBadRequest], "Missing some stuff", errors.New("This is an error msg")),
 			gin.H{},
-			helpers.CreateSuccessResponse("presignedURL", "2415"),
-			constants.StatusOK))
+			http.StatusBadRequest))
 }

@@ -1,71 +1,71 @@
 package constants
 
-const (
-	StatusContinue           = 100 // RFC 9110, 15.2.1
-	StatusSwitchingProtocols = 101 // RFC 9110, 15.2.2
-	StatusProcessing         = 102 // RFC 2518, 10.1
-	StatusEarlyHints         = 103 // RFC 8297
+var StatusTexts = map[int]string{
+	100: "Continue",
+	101: "Switching Protocols",
+	102: "Processing",
+	103: "Early Hints",
 
-	StatusOK                          = 200 // RFC 9110, 15.3.1
-	StatusCreated                     = 201 // RFC 9110, 15.3.2
-	StatusAccepted                    = 202 // RFC 9110, 15.3.3
-	StatusNonAuthoritativeInformation = 203 // RFC 9110, 15.3.4
-	StatusNoContent                   = 204 // RFC 9110, 15.3.5
-	StatusResetContent                = 205 // RFC 9110, 15.3.6
-	StatusPartialContent              = 206 // RFC 9110, 15.3.7
-	StatusMultiStatus                 = 207 // RFC 4918, 11.1
-	StatusAlreadyReported             = 208 // RFC 5842, 7.1
-	StatusIMUsed                      = 226 // RFC 3229, 10.4.1
+	200: "OK",
+	201: "Created",
+	202: "Accepted",
+	203: "Non-Authoritative Information",
+	204: "No Content",
+	205: "Reset Content",
+	206: "Partial Content",
+	207: "Multi-Status",
+	208: "Already Reported",
+	226: "IMUsed",
 
-	StatusMultipleChoices   = 300 // RFC 9110, 15.4.1
-	StatusMovedPermanently  = 301 // RFC 9110, 15.4.2
-	StatusFound             = 302 // RFC 9110, 15.4.3
-	StatusSeeOther          = 303 // RFC 9110, 15.4.4
-	StatusNotModified       = 304 // RFC 9110, 15.4.5
-	StatusUseProxy          = 305 // RFC 9110, 15.4.6
-	StatusSwitchProxy       = 306 // RFC 9110, 15.4.7 (Unused)
-	StatusTemporaryRedirect = 307 // RFC 9110, 15.4.8
-	StatusPermanentRedirect = 308 // RFC 9110, 15.4.9
+	300: "Multiple Choices",
+	301: "Moved Permanently",
+	302: "Found",
+	303: "See Other",
+	304: "Not Modified",
+	305: "Use-Proxy",
+	306: "Switch-Proxy",
+	307: "Temporary Redirect",
+	308: "Permanent Redirect",
 
-	StatusBadRequest                   = 400 // RFC 9110, 15.5.1
-	StatusUnauthorized                 = 401 // RFC 9110, 15.5.2
-	StatusPaymentRequired              = 402 // RFC 9110, 15.5.3
-	StatusForbidden                    = 403 // RFC 9110, 15.5.4
-	StatusNotFound                     = 404 // RFC 9110, 15.5.5
-	StatusMethodNotAllowed             = 405 // RFC 9110, 15.5.6
-	StatusNotAcceptable                = 406 // RFC 9110, 15.5.7
-	StatusProxyAuthRequired            = 407 // RFC 9110, 15.5.8
-	StatusRequestTimeout               = 408 // RFC 9110, 15.5.9
-	StatusConflict                     = 409 // RFC 9110, 15.5.10
-	StatusGone                         = 410 // RFC 9110, 15.5.11
-	StatusLengthRequired               = 411 // RFC 9110, 15.5.12
-	StatusPreconditionFailed           = 412 // RFC 9110, 15.5.13
-	StatusRequestEntityTooLarge        = 413 // RFC 9110, 15.5.14
-	StatusRequestURITooLong            = 414 // RFC 9110, 15.5.15
-	StatusUnsupportedMediaType         = 415 // RFC 9110, 15.5.16
-	StatusRequestedRangeNotSatisfiable = 416 // RFC 9110, 15.5.17
-	StatusExpectationFailed            = 417 // RFC 9110, 15.5.18
-	StatusTeapot                       = 418 // RFC 9110, 15.5.19 (Unused)
-	StatusMisdirectedRequest           = 421 // RFC 9110, 15.5.20
-	StatusUnprocessableEntity          = 422 // RFC 9110, 15.5.21
-	StatusLocked                       = 423 // RFC 4918, 11.3
-	StatusFailedDependency             = 424 // RFC 4918, 11.4
-	StatusTooEarly                     = 425 // RFC 8470, 5.2.
-	StatusUpgradeRequired              = 426 // RFC 9110, 15.5.22
-	StatusPreconditionRequired         = 428 // RFC 6585, 3
-	StatusTooManyRequests              = 429 // RFC 6585, 4
-	StatusRequestHeaderFieldsTooLarge  = 431 // RFC 6585, 5
-	StatusUnavailableForLegalReasons   = 451 // RFC 7725, 3
+	400: "Bad Request",
+	401: "Unauthorized",
+	402: "Payment Required",
+	403: "Forbidden",
+	404: "NotFound",
+	405: "Method Not Allowed",
+	406: "Not Acceptable",
+	407: "Proxy Auth Required",
+	408: "Request Timeout",
+	409: "Conflict",
+	410: "Gone",
+	411: "Length Required",
+	412: "Precondition Failed",
+	413: "Request Entity Too Large",
+	414: "Request URI Too Long",
+	415: "Unsupported Media Type",
+	416: "Requested Range Not Satisfiable",
+	417: "Expectation Failed",
+	418: "Teapot",
+	421: "Misdirected Request",
+	422: "Unprocessable Entity",
+	423: "Locked",
+	424: "Failed Dependency",
+	425: "Too Early",
+	426: "Upgrade Required",
+	428: "Precondition Required",
+	429: "Too Many Requests",
+	431: "Request Header Fields Too Large",
+	451: "Unavailable For Legal Reasons",
 
-	StatusInternalServerError           = 500 // RFC 9110, 15.6.1
-	StatusNotImplemented                = 501 // RFC 9110, 15.6.2
-	StatusBadGateway                    = 502 // RFC 9110, 15.6.3
-	StatusServiceUnavailable            = 503 // RFC 9110, 15.6.4
-	StatusGatewayTimeout                = 504 // RFC 9110, 15.6.5
-	StatusHTTPVersionNotSupported       = 505 // RFC 9110, 15.6.6
-	StatusVariantAlsoNegotiates         = 506 // RFC 2295, 8.1
-	StatusInsufficientStorage           = 507 // RFC 4918, 11.5
-	StatusLoopDetected                  = 508 // RFC 5842, 7.2
-	StatusNotExtended                   = 510 // RFC 2774, 7
-	StatusNetworkAuthenticationRequired = 511 // RFC 6585, 6
-)
+	500: "Internal Server Error",
+	501: "Not Implemented",
+	502: "Bad Gateway",
+	503: "Service Unavailable",
+	504: "Gateway Timeout",
+	505: "HTTP Version Not Supported",
+	506: "Variant Also Negotiates",
+	507: "Insufficient Storage",
+	508: "Loop Detected",
+	510: "Not Extended",
+	511: "Network Authentication Required",
+}
