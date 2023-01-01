@@ -1,7 +1,11 @@
 package routes
 
 import (
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/gin-gonic/gin"
+	"zestream-server/constants"
 	"zestream-server/controllers"
 )
 
@@ -23,13 +27,27 @@ func Init() *gin.Engine {
 		}
 	})
 
+	// Create a new session
+	sess, err := session.NewSession(&aws.Config{
+		Region: aws.String(constants.S3_REGION),
+	})
+	if err != nil {
+		return nil
+	}
+
+	// Create a new S3 client
+	s3Client := s3.New(sess)
+
 	v1 := r.Group("/api/v1")
 
 	v1.GET("ping", controllers.Ping)
 
 	v1.POST("process-video", controllers.ProcessVideo)
 
-	v1.GET("generate-presigned-url", controllers.GeneratePresignedURL)
+	v1.GET("generate-presigned-url", func(c *gin.Context) {
+		controllers.GeneratePresignedURL(c, s3Client)
+	})
+
 	v1.POST("register_video_process", controllers.PublishMessage)
 
 	return r
