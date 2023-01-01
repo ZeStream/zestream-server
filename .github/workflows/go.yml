@@ -1,4 +1,4 @@
-name: Go
+name: Build and Test
 
 on:
   push:
@@ -23,3 +23,14 @@ jobs:
 
     - name: Test
       run: cd controllers && go test
+      
+  golangci:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Lint
+        uses: golangci/golangci-lint-action@v2
+        with:
+          version: v1.32.2
+          skip-go-installation: true
