@@ -2,8 +2,8 @@ package controllers
 
 import (
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"path/filepath"
@@ -11,7 +11,7 @@ import (
 	"zestream-server/utils"
 )
 
-func GeneratePresignedURL(c *gin.Context) {
+func GeneratePresignedURL(c *gin.Context, s3Client s3iface.S3API) {
 
 	// Obtain the file name and extension from query params
 	fileName := c.Query("fileName")
@@ -25,14 +25,8 @@ func GeneratePresignedURL(c *gin.Context) {
 	// Generate a New Video ID
 	videoID := utils.VideoIDGen(extension)
 
-	// Create a new session
-	sess, _ := session.NewSession(&aws.Config{
-		Region: aws.String(constants.S3_REGION),
-	})
-	svc := s3.New(sess)
-
 	// Create a PutObjectRequest with the necessary parameters
-	req, _ := svc.PutObjectRequest(&s3.PutObjectInput{
+	req, _ := s3Client.PutObjectRequest(&s3.PutObjectInput{
 		Bucket: aws.String(constants.S3_BUCKET_NAME),
 		Key:    aws.String(videoID),
 	})
