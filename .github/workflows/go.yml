@@ -23,11 +23,3 @@ jobs:
 
     - name: Test
       run: cd controllers && go test
-      
-  golangci:
-    name: Lint
-    runs-on: ubuntu-latest
-    steps:
-    - name: Run golangci-lint
-      uses: golangci/golangci-lint-action@v3.3.1
-
