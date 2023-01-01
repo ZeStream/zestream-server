@@ -2,11 +2,28 @@ package helpers
 
 import "github.com/gin-gonic/gin"
 
-func errorSchema(err error, msg string, details string, statusCode uint8) gin.H {
+func CreateSuccessResponse(preSignedURL, vidID string) gin.H {
 	return gin.H{
-		"error":      err.Error(),
-		"message":    msg,
-		"detail":     details,
-		"statusCode": statusCode, // not sure if this should be done
+		"videoID":      vidID,
+		"preSignedURL": preSignedURL,
 	}
 }
+
+func CreateErrorResponse(msg, details string, err error) gin.H {
+	return gin.H{
+		"message": msg,
+		"details": details,
+		"error":   err.Error(),
+	}
+}
+
+func ErrorSchema(err gin.H, successRes gin.H, statusCode uint8) gin.H {
+	return gin.H{
+		"statusCode": statusCode,
+		"data":       successRes,
+		"error":      err,
+	}
+}
+
+// use it like this
+// ErrorSchema(CreateErrorResponse(---), {}, constant.StatusCode)
