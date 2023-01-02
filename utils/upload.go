@@ -8,7 +8,6 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"zestream-server/constants"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -22,7 +21,11 @@ import (
 // channel to extract files from the folder
 type fileWalk chan string
 
-func UploadToCloudStorage(path string, cloudPlatform string) {
+type Uploader interface {
+	Upload(walker fileWalk)
+}
+
+func UploadToCloudStorage(uploader Uploader, path string) {
 	walker := make(fileWalk)
 	go func() {
 		//get files to upload via the channel
@@ -33,6 +36,8 @@ func UploadToCloudStorage(path string, cloudPlatform string) {
 		close(walker)
 
 	}()
+
+	uploader.Upload(walker)
 
 }
 
@@ -48,37 +53,34 @@ func (f fileWalk) WalkFunc(path string, info os.FileInfo, err error) error {
 	return nil
 }
 
-type awsUploader struct {
-	bucketName string
-	prefix     string
+type AwsUploader struct {
+	BucketName      string
+	Prefix          string
+	Region          string
+	FolderLocalPath string
 }
 
-func (a awsUploader) uploadToAWS(walker fileWalk, localpath string) {
+func (a AwsUploader) Upload(walker fileWalk) {
 
 	//creating a new session
 	sess, err := session.NewSession(&aws.Config{
-		Region:                        aws.String(constants.S_REGION),
+		Region:                        aws.String(a.Region),
 		CredentialsChainVerboseErrors: aws.Bool(true),
 	})
 	if err != nil {
 		log.Fatalf("failed to create a session")
 	}
 
-	bucket := a.bucketName
+	bucket := a.BucketName
 	log.Printf("bucket %s", bucket)
-	if bucket == "" {
-		log.Fatal("Error: AWS_S3_BUCKET env variable not set")
-	}
-	prefix := a.prefix
-	if prefix == "" {
-		log.Fatal("Error: AWS_S3_PREFIX env variable not set")
-	}
+
+	prefix := a.Prefix
 
 	uploader := s3manager.NewUploader(sess)
 	for path := range walker {
-		rel, err := filepath.Rel(localpath, path)
+		rel, err := filepath.Rel(a.FolderLocalPath, path)
 		if err != nil {
-			log.Fatalln("Unable to get relative path ", localpath, path)
+			log.Fatalln("Unable to get relative path ", a.FolderLocalPath, path)
 		}
 
 		file, err := os.Open(path)
@@ -102,22 +104,25 @@ func (a awsUploader) uploadToAWS(walker fileWalk, localpath string) {
 	}
 }
 
-type gcpUploader struct {
-	bucketName string
-	projectId  string
-	client     *storage.Client
-	uploadPath string
+type GcpUploader struct {
+	BucketName string
+	ProjectId  string
+	UploadPath string
 }
 
-func (g *gcpUploader) uploadtToGcp(walker fileWalk) {
-
+func (g *GcpUploader) Upload(walker fileWalk) {
+	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", os.Getenv("GCP_CREDENTIALS"))
+	client, err := storage.NewClient(context.Background())
+	if err != nil {
+		log.Fatalln("Failed to create client ", err)
+	}
 	for path := range walker {
 		filename := filepath.Base(path)
-		fmt.Printf("Creating file /%v/%v\n", g.bucketName, filename)
+		fmt.Printf("Creating file /%v/%v\n", g.BucketName, filename)
 
 		ctx := context.Background()
 
-		wc := g.client.Bucket(g.bucketName).Object(g.uploadPath + filename).NewWriter(ctx)
+		wc := client.Bucket(g.BucketName).Object(g.UploadPath + filename).NewWriter(ctx)
 		blob, err := os.Open(path)
 		if err != nil {
 			log.Println("Failed opening file", path, err)
@@ -134,22 +139,22 @@ func (g *gcpUploader) uploadtToGcp(walker fileWalk) {
 
 }
 
-type azureUploader struct {
-	azureEndpoint string
-	containerName string
-	accountName   string
+type AzureUploader struct {
+	AzureEndpoint string
+	ContainerName string
+	AccountName   string
 }
 
-func (a azureUploader) uploadToAzure(walker fileWalk) {
+func (a AzureUploader) Upload(walker fileWalk) {
 
 	for path := range walker {
 		filename := filepath.Base(path)
 
 		//create indiviual url for every blob
-		u, _ := url.Parse(fmt.Sprint(a.azureEndpoint, a.containerName, "/", filename))
+		u, _ := url.Parse(fmt.Sprint(a.AzureEndpoint, a.ContainerName, "/", filename))
 
 		//create credential for
-		credential, errC := azblob.NewSharedKeyCredential(a.accountName, os.Getenv("AZURE_ACCESS_KEY"))
+		credential, errC := azblob.NewSharedKeyCredential(a.AccountName, os.Getenv("AZURE_ACCESS_KEY"))
 		if errC != nil {
 			log.Fatalln("Failed to create credential")
 		}
