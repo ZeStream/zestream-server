@@ -1,6 +1,9 @@
 package utils
 
 import (
+	"context"
+	"fmt"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -9,6 +12,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+
+	"cloud.google.com/go/storage"
 )
 
 // channel to extract files from the folder
@@ -92,4 +97,36 @@ func (a awsUploader) uploadToAWS(walker fileWalk, localpath string) {
 		}
 		log.Println("Uploaded", path, result.Location)
 	}
+}
+
+type gcpUploader struct {
+	bucketName string
+	projectId  string
+	client     *storage.Client
+	uploadPath string
+}
+
+func (g *gcpUploader) uploadtToGcp(walker fileWalk) {
+
+	for path := range walker {
+		filename := filepath.Base(path)
+		fmt.Printf("Creating file /%v/%v\n", g.bucketName, filename)
+
+		ctx := context.Background()
+
+		wc := g.client.Bucket(g.bucketName).Object(g.uploadPath + filename).NewWriter(ctx)
+		blob, err := os.Open(path)
+		if err != nil {
+			log.Println("Failed opening file", path, err)
+		}
+		defer blob.Close()
+		if _, err := io.Copy(wc, blob); err != nil {
+			log.Fatalln("Failed to upload", path, err)
+		}
+
+		if err := wc.Close(); err != nil {
+			log.Fatalln("unable to close the bucket", err)
+		}
+	}
+
 }
