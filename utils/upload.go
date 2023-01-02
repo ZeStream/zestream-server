@@ -78,10 +78,11 @@ func (a AwsUploader) Upload(walker fileWalk) {
 
 	uploader := s3manager.NewUploader(sess)
 	for path := range walker {
-		rel, err := filepath.Rel(a.FolderLocalPath, path)
-		if err != nil {
-			log.Fatalln("Unable to get relative path ", a.FolderLocalPath, path)
-		}
+		// rel, err := filepath.Rel(a.FolderLocalPath, path)
+		// if err != nil {
+		// 	log.Fatalln("Unable to get relative path ", a.FolderLocalPath, path)
+		// }
+		filename := filepath.Base(path)
 
 		file, err := os.Open(path)
 		if err != nil {
@@ -93,7 +94,7 @@ func (a AwsUploader) Upload(walker fileWalk) {
 
 		result, err := uploader.Upload(&s3manager.UploadInput{
 			Bucket: &bucket,
-			Key:    aws.String(filepath.Join(prefix, rel)),
+			Key:    aws.String(filepath.Join(prefix, filename)),
 			Body:   file,
 		})
 
