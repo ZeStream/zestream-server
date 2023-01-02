@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net/url"
 	"os"
 	"path/filepath"
 	"zestream-server/constants"
@@ -14,6 +15,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 
 	"cloud.google.com/go/storage"
+
+	"github.com/Azure/azure-storage-blob-go/azblob"
 )
 
 // channel to extract files from the folder
@@ -126,6 +129,45 @@ func (g *gcpUploader) uploadtToGcp(walker fileWalk) {
 
 		if err := wc.Close(); err != nil {
 			log.Fatalln("unable to close the bucket", err)
+		}
+	}
+
+}
+
+type azureUploader struct {
+	azureEndpoint string
+	containerName string
+	accountName   string
+}
+
+func (a azureUploader) uploadToAzure(walker fileWalk) {
+
+	for path := range walker {
+		filename := filepath.Base(path)
+
+		//create indiviual url for every blob
+		u, _ := url.Parse(fmt.Sprint(a.azureEndpoint, a.containerName, "/", filename))
+
+		//create credential for
+		credential, errC := azblob.NewSharedKeyCredential(a.accountName, os.Getenv("AZURE_ACCESS_KEY"))
+		if errC != nil {
+			log.Fatalln("Failed to create credential")
+		}
+		blockBlobUrl := azblob.NewBlockBlobURL(*u, azblob.NewPipeline(credential, azblob.PipelineOptions{}))
+
+		ctx := context.Background()
+		// Upload to data to blob storage
+		file, err := os.Open(path)
+		if err != nil {
+			log.Println("Failed to open file ", path)
+			continue
+		}
+		defer file.Close()
+		_, err = azblob.UploadFileToBlockBlob(ctx, file, blockBlobUrl, azblob.UploadToBlockBlobOptions{})
+		if err != nil {
+			log.Fatalln("Failure to upload to azure container:")
+		} else {
+			log.Printf("successfully uploaded %s ", path)
 		}
 	}
 
