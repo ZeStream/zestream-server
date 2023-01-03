@@ -140,7 +140,11 @@ func generateMPD(outputPath string) {
 
 	o, err := cmd.CombinedOutput()
 
-	utils.DeleteFiles(filePaths)
+	if err != nil {
+		log.Println(err)
+	}
+
+	err = utils.DeleteFiles(filePaths)
 
 	if err != nil {
 		log.Println(err)
