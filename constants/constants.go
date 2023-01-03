@@ -15,4 +15,6 @@ const AWS_ENDPOINT = "http://localhost:4566"
 const PRESIGNED_URL_EXPIRATION = 60 * time.Minute
 const OUTPUT_FILE_PATH_PREFIX = "output"
 const GCP_BUCKET_NAME = ""
+const GCP_PROJECT_ID = ""
 const AZURE_ACCOUNT_NAME = ""
+const AZURE_ENDPOINT = ""
