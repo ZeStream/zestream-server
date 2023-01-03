@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"zestream-server/constants"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -54,14 +55,16 @@ func (f fileWalk) WalkFunc(path string, info os.FileInfo, err error) error {
 }
 
 type AwsUploader struct {
-	BucketName      string
 	Prefix          string
 	Region          string
 	FolderLocalPath string
 }
 
 func (a AwsUploader) Upload(walker fileWalk) {
-
+	bucket := constants.S3_BUCKET_NAME
+	if bucket == "" {
+		log.Fatalln("AWS Bucketname not available")
+	}
 	//creating a new session
 	sess, err := session.NewSession(&aws.Config{
 		Region:                        aws.String(a.Region),
@@ -71,7 +74,6 @@ func (a AwsUploader) Upload(walker fileWalk) {
 		log.Fatalf("failed to create a session")
 	}
 
-	bucket := a.BucketName
 	log.Printf("bucket %s", bucket)
 
 	prefix := a.Prefix
@@ -102,7 +104,6 @@ func (a AwsUploader) Upload(walker fileWalk) {
 }
 
 type GcpUploader struct {
-	BucketName string
 	ProjectId  string
 	UploadPath string
 }
@@ -113,13 +114,17 @@ func (g *GcpUploader) Upload(walker fileWalk) {
 	if err != nil {
 		log.Fatalln("Failed to create client ", err)
 	}
+	bucketName := constants.GCP_BUCKET_NAME
+	if bucketName == "" {
+		log.Fatalln("GCP Bucketname not availabe")
+	}
 	for path := range walker {
 		filename := filepath.Base(path)
-		fmt.Printf("Creating file /%v/%v\n", g.BucketName, filename)
+		fmt.Printf("Creating file /%v/%v\n", bucketName, filename)
 
 		ctx := context.Background()
 
-		wc := client.Bucket(g.BucketName).Object(g.UploadPath + filename).NewWriter(ctx)
+		wc := client.Bucket(bucketName).Object(g.UploadPath + filename).NewWriter(ctx)
 		blob, err := os.Open(path)
 		if err != nil {
 			log.Println("Failed opening file", path, err)
@@ -139,11 +144,13 @@ func (g *GcpUploader) Upload(walker fileWalk) {
 type AzureUploader struct {
 	AzureEndpoint string
 	ContainerName string
-	AccountName   string
 }
 
 func (a AzureUploader) Upload(walker fileWalk) {
-
+	accountName := constants.AZURE_ACCOUNT_NAME
+	if accountName == "" {
+		log.Fatalln("azure account name not availabe")
+	}
 	for path := range walker {
 		filename := filepath.Base(path)
 
@@ -151,7 +158,7 @@ func (a AzureUploader) Upload(walker fileWalk) {
 		u, _ := url.Parse(fmt.Sprint(a.AzureEndpoint, a.ContainerName, "/", filename))
 
 		//create credential for
-		credential, errC := azblob.NewSharedKeyCredential(a.AccountName, os.Getenv("AZURE_ACCESS_KEY"))
+		credential, errC := azblob.NewSharedKeyCredential(accountName, os.Getenv("AZURE_ACCESS_KEY"))
 		if errC != nil {
 			log.Fatalln("Failed to create credential")
 		}
