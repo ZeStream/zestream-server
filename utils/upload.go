@@ -31,7 +31,7 @@ func UploadToCloudStorage(uploader Uploader, path string) {
 	go func() {
 		//get files to upload via the channel
 		if err := filepath.Walk(path, walker.WalkFunc); err != nil {
-			log.Fatalln("Walk failed: ", err)
+			log.Println("Walk failed: ", err)
 		}
 
 		close(walker)
@@ -63,7 +63,7 @@ type AwsUploader struct {
 func (a AwsUploader) Upload(walker fileWalk) {
 	bucket := constants.S3_BUCKET_NAME
 	if bucket == "" {
-		log.Fatalln("AWS Bucketname not available")
+		log.Println("AWS Bucketname not available")
 	}
 	log.Printf("bucket %s", bucket)
 
@@ -88,7 +88,7 @@ func (a AwsUploader) Upload(walker fileWalk) {
 		})
 
 		if err != nil {
-			log.Fatalln("Failed to upload", path, err)
+			log.Println("Failed to upload", path, err)
 		}
 		log.Println("Uploaded", path, result.Location)
 	}
@@ -103,7 +103,7 @@ type GcpUploader struct {
 func (g *GcpUploader) Upload(walker fileWalk) {
 	bucketName := constants.GCP_BUCKET_NAME
 	if bucketName == "" {
-		log.Fatalln("GCP Bucketname not available")
+		log.Println("GCP Bucketname not available")
 	}
 	for path := range walker {
 		filename := filepath.Base(path)
@@ -118,11 +118,13 @@ func (g *GcpUploader) Upload(walker fileWalk) {
 		}
 		defer blob.Close()
 		if _, err := io.Copy(wc, blob); err != nil {
-			log.Fatalln("Failed to upload", path, err)
+			log.Println("Failed to upload", path, err)
 		}
 
 		if err := wc.Close(); err != nil {
-			log.Fatalln("unable to close the bucket", err)
+			log.Println("unable to close the bucket", err)
+		} else {
+			log.Println("successfully uploaded ", path)
 		}
 	}
 
@@ -139,7 +141,7 @@ func (a AzureUploader) Upload(walker fileWalk) {
 	accountName := constants.AZURE_ACCOUNT_NAME
 	azureEndpoint := constants.AZURE_ENDPOINT
 	if accountName == "" {
-		log.Fatalln("azure account name not available")
+		log.Println("azure account name not available")
 	}
 	if azureEndpoint == "" {
 		log.Fatalf("azure endpoint not available")
@@ -162,7 +164,7 @@ func (a AzureUploader) Upload(walker fileWalk) {
 		defer file.Close()
 		_, err = azblob.UploadFileToBlockBlob(ctx, file, blockBlobUrl, azblob.UploadToBlockBlobOptions{})
 		if err != nil {
-			log.Fatalln("Failure to upload to azure container:")
+			log.Println("Failure to upload to azure container:")
 		} else {
 			log.Printf("successfully uploaded %s ", path)
 		}
