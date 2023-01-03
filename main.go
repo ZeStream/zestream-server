@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"time"
 	"zestream/constants"
 	"zestream/routes"
 
@@ -24,8 +25,16 @@ func main() {
 	if port == "" {
 		port = constants.DEFAULT_PORT
 	}
+	router := http.NewServeMux()
+	server := &http.Server{
+		Addr:         port,
+		Handler:      router,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 1 * time.Second,
+		IdleTimeout:  15 * time.Second,
+	}
 
-	err := http.ListenAndServe(port, nil)
+	err := server.ListenAndServe()
 
 	if err != nil {
 		fmt.Println(err)
