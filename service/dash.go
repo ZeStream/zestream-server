@@ -39,7 +39,7 @@ func GenerateDash(fileName string) {
 	generateMPD(outputPath)
 }
 
-func generateAudioFiles(fileName string, targetFile string, outputPath string, wg *sync.WaitGroup) {
+func generateAudioFiles(_ string, targetFile string, outputPath string, wg *sync.WaitGroup) {
 	for fileType, filePrefix := range constants.AudioFileTypeMap {
 		var outputFile = outputPath + filePrefix
 
@@ -47,7 +47,7 @@ func generateAudioFiles(fileName string, targetFile string, outputPath string, w
 	}
 }
 
-func generateVideoFiles(fileName string, targetFile string, outputPath string, wg *sync.WaitGroup) {
+func generateVideoFiles(_ string, targetFile string, outputPath string, wg *sync.WaitGroup) {
 	for fileType, filePrefix := range constants.VideoFileTypeMap {
 		var outputFile = outputPath + filePrefix
 
