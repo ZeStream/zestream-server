@@ -55,9 +55,9 @@ func (f fileWalk) WalkFunc(path string, info os.FileInfo, err error) error {
 }
 
 type AwsUploader struct {
-	Prefix          string
-	Region          string
-	FolderLocalPath string
+	Prefix string
+	//common session to be used by every upload
+	Session *session.Session
 }
 
 func (a AwsUploader) Upload(walker fileWalk) {
@@ -65,20 +65,11 @@ func (a AwsUploader) Upload(walker fileWalk) {
 	if bucket == "" {
 		log.Fatalln("AWS Bucketname not available")
 	}
-	//creating a new session
-	sess, err := session.NewSession(&aws.Config{
-		Region:                        aws.String(a.Region),
-		CredentialsChainVerboseErrors: aws.Bool(true),
-	})
-	if err != nil {
-		log.Fatalf("failed to create a session")
-	}
-
 	log.Printf("bucket %s", bucket)
 
 	prefix := a.Prefix
 
-	uploader := s3manager.NewUploader(sess)
+	uploader := s3manager.NewUploader(a.Session)
 	for path := range walker {
 		filename := filepath.Base(path)
 
@@ -104,19 +95,15 @@ func (a AwsUploader) Upload(walker fileWalk) {
 }
 
 type GcpUploader struct {
-	ProjectId  string
 	UploadPath string
+	//common azure storage client to be used for every upload
+	Client *storage.Client
 }
 
 func (g *GcpUploader) Upload(walker fileWalk) {
-	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", os.Getenv("GCP_CREDENTIALS"))
-	client, err := storage.NewClient(context.Background())
-	if err != nil {
-		log.Fatalln("Failed to create client ", err)
-	}
 	bucketName := constants.GCP_BUCKET_NAME
 	if bucketName == "" {
-		log.Fatalln("GCP Bucketname not availabe")
+		log.Fatalln("GCP Bucketname not available")
 	}
 	for path := range walker {
 		filename := filepath.Base(path)
@@ -124,7 +111,7 @@ func (g *GcpUploader) Upload(walker fileWalk) {
 
 		ctx := context.Background()
 
-		wc := client.Bucket(bucketName).Object(g.UploadPath + filename).NewWriter(ctx)
+		wc := g.Client.Bucket(bucketName).Object(g.UploadPath + filename).NewWriter(ctx)
 		blob, err := os.Open(path)
 		if err != nil {
 			log.Println("Failed opening file", path, err)
@@ -142,29 +129,30 @@ func (g *GcpUploader) Upload(walker fileWalk) {
 }
 
 type AzureUploader struct {
-	AzureEndpoint string
 	ContainerName string
+
+	//common for every upload process
+	AzureCredential *azblob.SharedKeyCredential
 }
 
 func (a AzureUploader) Upload(walker fileWalk) {
 	accountName := constants.AZURE_ACCOUNT_NAME
+	azureEndpoint := constants.AZURE_ENDPOINT
 	if accountName == "" {
-		log.Fatalln("azure account name not availabe")
+		log.Fatalln("azure account name not available")
+	}
+	if azureEndpoint == "" {
+		log.Fatalf("azure endpoint not available")
 	}
 	for path := range walker {
 		filename := filepath.Base(path)
 
 		//create indiviual url for every blob
-		u, _ := url.Parse(fmt.Sprint(a.AzureEndpoint, a.ContainerName, "/", filename))
-
-		//create credential for
-		credential, errC := azblob.NewSharedKeyCredential(accountName, os.Getenv("AZURE_ACCESS_KEY"))
-		if errC != nil {
-			log.Fatalln("Failed to create credential")
-		}
-		blockBlobUrl := azblob.NewBlockBlobURL(*u, azblob.NewPipeline(credential, azblob.PipelineOptions{}))
+		u, _ := url.Parse(fmt.Sprint(azureEndpoint, a.ContainerName, "/", filename))
+		blockBlobUrl := azblob.NewBlockBlobURL(*u, azblob.NewPipeline(a.AzureCredential, azblob.PipelineOptions{}))
 
 		ctx := context.Background()
+
 		// Upload to data to blob storage
 		file, err := os.Open(path)
 		if err != nil {
