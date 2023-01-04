@@ -30,6 +30,7 @@ func GenerateDash(fileName string, watermarkFileName string, watermarkFileDimens
 	outputPath, err := utils.GetOutputFilePathName(fileName, fileNameStripped)
 	if err != nil {
 		log.Println(err)
+		return
 	}
 
 	var wg sync.WaitGroup
