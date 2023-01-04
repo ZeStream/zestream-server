@@ -22,8 +22,7 @@ func VideoIDGen(fileExtension string) string {
 	sum := hash.Sum(nil)
 
 	// Convert the hash to an int64 value
-	var i int64
-	i = int64(binary.LittleEndian.Uint64(sum))
+	var i int64 = int64(binary.LittleEndian.Uint64(sum))
 	rand.Seed(i)
 
 	// Generate a 8 digit random number
