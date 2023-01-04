@@ -79,8 +79,6 @@ func (a AwsUploader) Upload(walker fileWalk) {
 			continue
 		}
 
-		defer file.Close()
-
 		result, err := uploader.Upload(&s3manager.UploadInput{
 			Bucket: &bucket,
 			Key:    aws.String(filepath.Join(prefix, filename)),
@@ -88,9 +86,15 @@ func (a AwsUploader) Upload(walker fileWalk) {
 		})
 
 		if err != nil {
+			//close the file before error log
+			file.Close()
 			log.Println("Failed to upload", path, err)
 		}
 		log.Println("Uploaded", path, result.Location)
+
+		if err := file.Close(); err != nil {
+			log.Println("Unable to close the file")
+		}
 	}
 }
 
@@ -116,15 +120,23 @@ func (g *GcpUploader) Upload(walker fileWalk) {
 		if err != nil {
 			log.Println("Failed opening file", path, err)
 		}
-		defer blob.Close()
+
 		if _, err := io.Copy(wc, blob); err != nil {
+			//close the blob before error log
+			blob.Close()
 			log.Println("Failed to upload", path, err)
 		}
 
 		if err := wc.Close(); err != nil {
+			//close the file before error log
+			blob.Close()
 			log.Println("unable to close the bucket", err)
 		} else {
 			log.Println("successfully uploaded ", path)
+		}
+
+		if err := blob.Close(); err != nil {
+			log.Println("unable to close the file")
 		}
 	}
 
@@ -144,7 +156,7 @@ func (a AzureUploader) Upload(walker fileWalk) {
 		log.Println("azure account name not available")
 	}
 	if azureEndpoint == "" {
-		log.Fatalf("azure endpoint not available")
+		log.Println("azure endpoint not available")
 	}
 	for path := range walker {
 		filename := filepath.Base(path)
@@ -161,12 +173,18 @@ func (a AzureUploader) Upload(walker fileWalk) {
 			log.Println("Failed to open file ", path)
 			continue
 		}
-		defer file.Close()
+
 		_, err = azblob.UploadFileToBlockBlob(ctx, file, blockBlobUrl, azblob.UploadToBlockBlobOptions{})
 		if err != nil {
+			//close the file before error log
+			file.Close()
 			log.Println("Failure to upload to azure container:")
 		} else {
 			log.Printf("successfully uploaded %s ", path)
+		}
+
+		if err := file.Close(); err != nil {
+			log.Println("Unable to close the file ", path)
 		}
 	}
 
