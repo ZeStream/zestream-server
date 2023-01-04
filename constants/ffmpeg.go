@@ -44,6 +44,7 @@ const (
 const DashOutputExt = ".mpd"
 const MP4Box = "MP4Box"
 const Overlay = "overlay"
+const Scale = "scale"
 
 type DIMENSION int
 
