@@ -101,7 +101,7 @@ func generateCappedBitrateVideo(targetFile string, outputFile string, fileType c
 	wg.Done()
 }
 
-func getOverlay(waterMarkFile string, watermarkFileDimension map[string]int, watermarkPosition map[string]int) *ffmpeg.Stream {
+func getOverlay(waterMarkFile string, watermarkFileDimension map[string]int) *ffmpeg.Stream {
 	overlayArgs := "" + strconv.Itoa(watermarkFileDimension[constants.WaterMarkSizeMap[constants.X]]) + ":" + strconv.Itoa(watermarkFileDimension[constants.WaterMarkSizeMap[constants.Y]]) + ""
 	return ffmpeg.Input(waterMarkFile).Filter("scale", ffmpeg.Args{overlayArgs})
 }
@@ -112,7 +112,7 @@ func generateCappedBitrateVideoWithWaterMark(targetFile string, outputFile strin
 	ffmpeg.Filter(
 		[]*ffmpeg.Stream{
 			ffmpeg.Input(targetFile),
-			getOverlay(waterMarkFile, watermarkFileDimension, watermarkPosition),
+			getOverlay(waterMarkFile, watermarkFileDimension),
 		}, constants.Overlay, ffmpeg.Args{filterArgs}).
 		Output(outputFile, ffmpeg.KwArgs{
 			constants.VideoKwargs[constants.Preset]:         constants.FFmpegConfig[constants.Preset],
