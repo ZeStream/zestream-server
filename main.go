@@ -14,7 +14,7 @@ import (
 
 func dev() {
 	utils.Fetch("https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WeAreGoingOnBullrun.mp4", "Test.mp4")
-	service.GenerateDash("Test.mp4")
+	service.GenerateDash("Test.mp4", "TestWatermark.png", map[string]int{"x": 64, "y": -1}, map[string]int{"x": 10, "y": 10}, false)
 }
 
 func main() {

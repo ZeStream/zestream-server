@@ -43,6 +43,24 @@ const (
 
 const DashOutputExt = ".mpd"
 const MP4Box = "MP4Box"
+const Overlay = "overlay"
+
+type DIMENSION int
+
+const (
+	X DIMENSION = iota
+	Y
+)
+
+var WaterMarkSizeMap = map[DIMENSION]string{
+	X: "x",
+	Y: "y",
+}
+
+var WaterMarkPositionMap = map[DIMENSION]string{
+	X: "x",
+	Y: "y",
+}
 
 var AudioFileTypeMap = map[FILE_TYPE]string{
 	Audio192K: "_audio192k.m4a",
