@@ -35,39 +35,44 @@ func GenerateDash(fileName string, watermarkFileName string, watermarkFileDimens
 
 	var wg sync.WaitGroup
 
-	wg.Add(len(constants.AudioFileTypeMap) + len(constants.VideoFileTypeMap))
+	wg.Add(len(constants.AudioFileTypeMap) + len(constants.VideoFileTypeMap) + 1)
 
-	go generateAudioFiles(fileName, targetFile, outputPath, &wg)
+	generateAudioFiles(targetFile, outputPath, &wg)
 
-	go generateVideoFiles(fileName, targetFile, outputPath, watermarkFile, watermarkFileDimension, watermarkPosition, withWatermark, &wg)
+	generateVideoFiles(targetFile, outputPath, &wg)
+
+	generateThumbnailFiles(targetFile, outputPath, &wg)
 
 	wg.Wait()
 
 	generateMPD(outputPath)
 }
 
-func generateAudioFiles(fileName string, targetFile string, outputPath string, wg *sync.WaitGroup) {
+func generateAudioFiles(targetFile string, outputPath string, wg *sync.WaitGroup) {
 	for fileType, filePrefix := range constants.AudioFileTypeMap {
 		var outputFile = outputPath + filePrefix
 
-		go generateCappedBitrateAudio(targetFile, outputFile, fileType, wg)
+		go generateMultiBitrateAudio(targetFile, outputFile, fileType, wg)
 	}
 }
 
-func generateVideoFiles(fileName string, targetFile string, outputPath string, waterMarkFile string, watermarkFileDimension map[string]int, watermarkPosition map[string]int, withWatermark bool, wg *sync.WaitGroup) {
+func generateVideoFiles(targetFile string, outputPath string, wg *sync.WaitGroup) {
 	for fileType, filePrefix := range constants.VideoFileTypeMap {
 		var outputFile = outputPath + filePrefix
 
-		if withWatermark {
-			go generateCappedBitrateVideoWithWaterMark(targetFile, outputFile, fileType, waterMarkFile, watermarkFileDimension, watermarkPosition, wg)
-		} else {
-			go generateCappedBitrateVideo(targetFile, outputFile, fileType, wg)
-		}
-
+		go generateMultiBitrateVideo(targetFile, outputFile, fileType, wg)
 	}
 }
 
-func generateCappedBitrateAudio(targetFile string, outputFile string, fileType constants.FILE_TYPE, wg *sync.WaitGroup) {
+func generateThumbnailFiles(targetFile string, outputPath string, wg *sync.WaitGroup) {
+	for _, filePrefix := range constants.ImageFileTypeMap {
+		var outputFile = outputPath + filePrefix
+
+		go generateThumbnails(targetFile, outputFile, constants.DEFAULT_THUMBNAIL_TIMESTAMP, wg)
+	}
+}
+
+func generateMultiBitrateAudio(targetFile string, outputFile string, fileType constants.FILE_TYPE, wg *sync.WaitGroup) {
 	ffmpeg.Input(targetFile, ffmpeg.KwArgs{
 		constants.AudioKwargs[constants.HWAccel]: constants.FFmpegConfig[constants.HWAccel],
 	}).
@@ -131,11 +136,27 @@ func generateCappedBitrateVideoWithWaterMark(targetFile string, outputFile strin
 	wg.Done()
 }
 
+// generateThumbnail generates a thumbnail at given timestamp, from the target file and write it to output file
+func generateThumbnails(targetFile string, outputFile string, timeStamp string, wg *sync.WaitGroup) {
+	ffmpeg.Input(targetFile).
+		Output(outputFile, ffmpeg.KwArgs{
+			constants.VideoKwargs[constants.ScreenShot]:  timeStamp,
+			constants.VideoKwargs[constants.VideoFrames]: constants.FFmpegConfig[constants.VideoFrames],
+		}).
+		OverWriteOutput().
+		ErrorToStdOut().
+		Run()
+
+	wg.Done()
+}
+
+// generateMPD (Media Presentation Description), generates the XML description file
+// for the given output path.
 func generateMPD(outputPath string) {
 	var fileArgs bytes.Buffer
 
-	mergePathToString(&fileArgs, outputPath, constants.AudioFileTypeMap)
-	mergePathToString(&fileArgs, outputPath, constants.VideoFileTypeMap)
+	checkFileExistsAndAppendToBuffer(&fileArgs, outputPath, constants.AudioFileTypeMap)
+	checkFileExistsAndAppendToBuffer(&fileArgs, outputPath, constants.VideoFileTypeMap)
 
 	var filePaths = strings.TrimSuffix(fileArgs.String(), " ")
 
@@ -156,7 +177,11 @@ func generateMPD(outputPath string) {
 
 	o, err := cmd.CombinedOutput()
 
-	utils.DeleteFiles(filePaths)
+	if err != nil {
+		log.Println(err)
+	}
+
+	err = utils.DeleteFiles(filePaths)
 
 	if err != nil {
 		log.Println(err)
@@ -165,7 +190,9 @@ func generateMPD(outputPath string) {
 	log.Println(string(o))
 }
 
-func mergePathToString(fileArgs *bytes.Buffer, outputPath string, fileTypes map[constants.FILE_TYPE]string) {
+// checkFileExistsAndAppendToBuffer checks if the given output file exits, then appends the
+// path to buffer.
+func checkFileExistsAndAppendToBuffer(fileArgs *bytes.Buffer, outputPath string, fileTypes map[constants.FILE_TYPE]string) {
 	for _, filePrefix := range fileTypes {
 		var outputFile = outputPath + filePrefix
 		if utils.IsFileValid(outputFile) {
