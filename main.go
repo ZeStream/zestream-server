@@ -33,7 +33,14 @@ func main() {
 		port = constants.DEFAULT_PORT
 	}
 
-	err := http.ListenAndServe(port, nil)
+	server := &http.Server{
+		Addr:         port,
+		ReadTimeout:  constants.READ_TIMEOUT,
+		WriteTimeout: constants.WRITE_TIMEOUT,
+		IdleTimeout:  constants.IDLE_TIMEOUT,
+	}
+
+	err := server.ListenAndServe()
 
 	if err != nil {
 		fmt.Println(err)
