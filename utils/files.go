@@ -3,7 +3,6 @@ package utils
 import (
 	"bytes"
 	"errors"
-	"log"
 	"os"
 	"os/exec"
 	"path"
@@ -12,6 +11,10 @@ import (
 	"zestream-server/constants"
 )
 
+/*
+GetDownloadFilePathName returns the absolute path of the file present in downloads folder
+takes fileName as argument
+*/
 func GetDownloadFilePathName(fileName string) (string, error) {
 	cwd, err := os.Getwd()
 
@@ -32,6 +35,10 @@ func GetDownloadFilePathName(fileName string) (string, error) {
 	return newPath, nil
 }
 
+/*
+GetOutputFilePathName returns the absolute path of the file present in downloads folder
+takes fileName as argument
+*/
 func GetOutputFilePathName(fileName string, postfix string) (string, error) {
 	cwd, err := os.Getwd()
 
@@ -55,6 +62,7 @@ func GetOutputFilePathName(fileName string, postfix string) (string, error) {
 	return newPath, nil
 }
 
+// createDirPath creates a directory at the given path
 func createDirPath(pathName string) error {
 
 	err := os.MkdirAll(pathName, os.ModePerm)
@@ -66,10 +74,12 @@ func createDirPath(pathName string) error {
 	return nil
 }
 
+// RemoveExtensionFromFile returns the fileName without the extension, if fileName doesn't end with ext, it returns the fileName
 func RemoveExtensionFromFile(fileName string) string {
 	return strings.TrimSuffix(fileName, filepath.Ext(fileName))
 }
 
+// IsFileValid checks if the file is present on that path, returns true, if file is there else false
 func IsFileValid(filePath string) bool {
 	if _, err := os.Stat(filePath); errors.Is(err, os.ErrNotExist) {
 		return false
@@ -77,15 +87,7 @@ func IsFileValid(filePath string) bool {
 	return true
 }
 
-func WrapStringInQuotes(str string) string {
-	var buff bytes.Buffer
-
-	buff.WriteString(str)
-	buff.WriteString(" ")
-
-	return buff.String()
-}
-
+// StringToArgsGenerator takes a map of arguments, and it returns the command line form of arguments
 func StringToArgsGenerator(args map[string]string) string {
 	var argsStr bytes.Buffer
 
@@ -102,10 +104,9 @@ func StringToArgsGenerator(args map[string]string) string {
 	return argsStr.String()
 }
 
-func DeleteFiles(filePaths string) {
+// DeleteFiles deletes the file/s given in the filePaths
+func DeleteFiles(filePaths string) error {
 	_, err := exec.Command("rm", strings.Split(filePaths, " ")...).Output()
 
-	if err != nil {
-		log.Println(err)
-	}
+	return err
 }
