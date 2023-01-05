@@ -9,6 +9,10 @@ import (
 	"zestream-server/constants"
 )
 
+/*
+Fetch downlods a file to downloads folder from the given url,
+and names it as given fileName
+*/
 func Fetch(url string, fileName string) error {
 	newFileName, err := GetDownloadFilePathName(fileName)
 	if err != nil {
