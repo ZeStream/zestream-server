@@ -9,12 +9,11 @@ import (
 	"zestream-server/constants"
 	"zestream-server/routes"
 	"zestream-server/service"
-	"zestream-server/utils"
 )
 
 func dev() {
-	utils.Fetch("https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WeAreGoingOnBullrun.mp4", "Test.mp4")
-	service.GenerateDash("Test.mp4", "TestWatermark.png", map[string]int{"x": 64, "y": -1}, map[string]int{"x": 10, "y": 10}, false)
+	// utils.Fetch("https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WeAreGoingOnBullrun.mp4", "Test.mp4")
+	service.GenerateDash("Test.mp4", constants.WaterMark{FileName: "TestWatermark.png", Dimension: map[string]int{"x": 64, "y": -1}, Position: nil}, false)
 }
 
 func main() {

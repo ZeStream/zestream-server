@@ -66,6 +66,12 @@ var WaterMarkPositionMap = map[DIMENSION]string{
 	Y: "y",
 }
 
+type WaterMark struct {
+	FileName  string
+	Dimension map[string]int
+	Position  map[string]int
+}
+
 var AudioFileTypeMap = map[FILE_TYPE]string{
 	Audio192K: "_audio192k.m4a",
 }
