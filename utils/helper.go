@@ -1,10 +1,10 @@
 package utils
 
 import (
+	"bytes"
 	"crypto/rand"
 	"encoding/binary"
 	math_rand "math/rand"
-	"bytes"
 	"strconv"
 )
 
