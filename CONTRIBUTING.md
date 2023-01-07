@@ -6,7 +6,7 @@
 
 ## Setup
 
-1. [Install/Update](https://go.dev/doc/install) Golang to v1.9
+1. [Install/Update](https://go.dev/doc/install) Golang to v1.19
 2. Fork the repo
 3. Clone the forked repo
 
