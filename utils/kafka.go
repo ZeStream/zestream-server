@@ -8,14 +8,16 @@ import (
 	"github.com/segmentio/kafka-go"
 )
 
-func PublishMessage(kafkaURI, topic string, message string) string {
+func PublishMessage(kafkaURI, topic string, message string) (string, error) {
 
 	partition := 0
+	m := "success"
 
 	conn, err := kafka.DialLeader(context.Background(), "tcp", kafkaURI, topic, partition)
 	if err != nil {
-		log.Println("failed to dial leader:", err)
-		return err.Error()
+		m = "failed to dial leader"
+		log.Println(m, err)
+		return m, err
 	}
 
 	conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
@@ -23,14 +25,16 @@ func PublishMessage(kafkaURI, topic string, message string) string {
 		kafka.Message{Value: []byte(message)},
 	)
 	if err != nil {
-		log.Println("failed to write messages:", err)
-		return err.Error()
+		m = "failed to write messages"
+		log.Println(m, err)
+		return m, err
 	}
 
 	if err := conn.Close(); err != nil {
-		log.Println("failed to close writer:", err)
-		return err.Error()
+		m = "failed to close writer"
+		log.Println(m, err)
+		return m, err
 	}
 
-	return "success"
+	return m, nil
 }
