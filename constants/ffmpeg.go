@@ -4,6 +4,7 @@ type FILE_TYPE int
 
 const (
 	Audio192K FILE_TYPE = iota
+	ImagePng
 	Video5M
 	Video3M
 	Video1M
@@ -28,6 +29,8 @@ const (
 	AllowSoftEncoding
 	VideoFormat
 	HWAccel
+	VideoFrames
+	ScreenShot
 )
 
 type MP4BOX_ARGS int
@@ -46,6 +49,10 @@ const MP4Box = "MP4Box"
 
 var AudioFileTypeMap = map[FILE_TYPE]string{
 	Audio192K: "_audio192k.m4a",
+}
+
+var ImageFileTypeMap = map[FILE_TYPE]string{
+	ImagePng: ".png",
 }
 
 var VideoFileTypeMap = map[FILE_TYPE]string{
@@ -85,8 +92,10 @@ var VideoKwargs = map[FFMPEG_KWARGS]string{
 	ConstantRateFactor: "crf",
 	MaxRate:            "maxrate",
 	BufferSize:         "bufsize",
-	VideoFormat:        "f",
 	HWAccel:            "hwaccel",
+	VideoFormat:        "f",
+	VideoFrames:        "frames:v",
+	ScreenShot:         "ss",
 }
 
 var AudioKwargs = map[FFMPEG_KWARGS]string{
@@ -111,6 +120,7 @@ var FFmpegConfig = map[FFMPEG_KWARGS]string{
 	AllowSoftEncoding:  "1",
 	VideoFormat:        "mp4",
 	HWAccel:            "auto",
+	VideoFrames:        "1",
 }
 
 var Mp4BoxArgs = map[MP4BOX_ARGS]string{
