@@ -25,7 +25,7 @@ You want to implement the similar feature in your own product, without any hassl
 
 ## Dev Setup
 
-1. Install Golang v1.9 from [Go.dev](https://go.dev/doc/install)
+1. Install Golang v1.19 from [Go.dev](https://go.dev/doc/install)
 2. Fork this repo, and clone the forked repo
 3. `cd zestream-server`
 4. `go get .`
