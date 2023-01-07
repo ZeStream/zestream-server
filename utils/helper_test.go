@@ -1,9 +1,8 @@
-package controllers
+package utils
 
 import (
 	"strings"
 	"testing"
-	"zestream-server/utils"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -11,7 +10,7 @@ import (
 func TestVideoIDGen(t *testing.T) {
 
 	// Call the Video ID Gen function
-	videoIDExt := utils.VideoIDGen(".mp4")
+	videoIDExt := VideoIDGen(".mp4")
 
 	//Split the string into digits and ext
 	videoID := strings.Split(videoIDExt, ".")
