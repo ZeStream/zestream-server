@@ -20,11 +20,6 @@ func GenerateDash(fileName string, watermark constants.WaterMark, withWatermark 
 		log.Println(err)
 	}
 
-	watermarkFile, err := utils.GetDownloadFilePathName(watermark.FileName)
-	if err != nil {
-		log.Println(err)
-	}
-
 	var fileNameStripped = utils.RemoveExtensionFromFile(fileName)
 
 	outputPath, err := utils.GetOutputFilePathName(fileName, fileNameStripped)
@@ -39,7 +34,7 @@ func GenerateDash(fileName string, watermark constants.WaterMark, withWatermark 
 
 	generateAudioFiles(targetFile, outputPath, &wg)
 
-	generateVideoFiles(targetFile, outputPath, watermarkFile, withWatermark, watermark, &wg)
+	generateVideoFiles(targetFile, outputPath, withWatermark, watermark, &wg)
 
 	generateThumbnailFiles(targetFile, outputPath, &wg)
 
@@ -56,11 +51,11 @@ func generateAudioFiles(targetFile string, outputPath string, wg *sync.WaitGroup
 	}
 }
 
-func generateVideoFiles(targetFile string, outputPath string, waterMarkFile string, withWatermark bool, watermark constants.WaterMark, wg *sync.WaitGroup) {
+func generateVideoFiles(targetFile string, outputPath string, withWatermark bool, watermark constants.WaterMark, wg *sync.WaitGroup) {
 	for fileType, filePrefix := range constants.VideoFileTypeMap {
 		var outputFile = outputPath + filePrefix
 
-		go generateMultiBitrateVideo(targetFile, outputFile, fileType, waterMarkFile, withWatermark, watermark, wg)
+		go generateMultiBitrateVideo(targetFile, outputFile, fileType, withWatermark, watermark, wg)
 	}
 }
 
@@ -87,9 +82,9 @@ func generateMultiBitrateAudio(targetFile string, outputFile string, fileType co
 	wg.Done()
 }
 
-func generateMultiBitrateVideo(targetFile string, outputFile string, fileType constants.FILE_TYPE, watermarkFile string, withWatermark bool, watermark constants.WaterMark, wg *sync.WaitGroup) {
+func generateMultiBitrateVideo(targetFile string, outputFile string, fileType constants.FILE_TYPE, withWatermark bool, watermark constants.WaterMark, wg *sync.WaitGroup) {
 
-	getInput(targetFile, watermarkFile, withWatermark, watermark.Dimension, watermark.Position).
+	getInput(targetFile, withWatermark, watermark).
 		Output(outputFile, ffmpeg.KwArgs{
 			constants.VideoKwargs[constants.Preset]:         constants.FFmpegConfig[constants.Preset],
 			constants.VideoKwargs[constants.Tune]:           constants.FFmpegConfig[constants.Tune],
@@ -162,17 +157,21 @@ func generateMPD(outputPath string) {
 }
 
 // Returns input based on if the watermark is needed or not
-func getInput(targetFile string, watermarkFile string, withWatermark bool, watermarkDimension map[string]int, watermarkPosition map[string]int) *ffmpeg.Stream {
+func getInput(targetFile string, withWatermark bool, watermark constants.WaterMark) *ffmpeg.Stream {
 
 	input := ffmpeg.Input(targetFile)
 
 	if withWatermark {
-		filterArgs := "" + strconv.Itoa(watermarkPosition[constants.WaterMarkPositionMap[constants.X]]) + ":" + strconv.Itoa(watermarkPosition[constants.WaterMarkPositionMap[constants.Y]]) + ""
+		watermarkFile, err := utils.GetDownloadFilePathName(watermark.FileName)
+		if err != nil {
+			log.Println(err)
+		}
+		filterArgs := "" + strconv.Itoa(watermark.Position[constants.WaterMarkPositionMap[constants.X]]) + ":" + strconv.Itoa(watermark.Position[constants.WaterMarkPositionMap[constants.Y]]) + ""
 
 		return ffmpeg.Filter(
 			[]*ffmpeg.Stream{
 				input,
-				getOverlay(watermarkFile, watermarkDimension),
+				getOverlay(watermarkFile, watermark.Dimension),
 			}, constants.Overlay, ffmpeg.Args{filterArgs})
 	}
 	return input
