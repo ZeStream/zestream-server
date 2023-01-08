@@ -32,7 +32,7 @@ func PublishMessage(c *gin.Context) {
 		return
 	}
 
-	message, err := utils.PublishMessage(configs.EnvVar[configs.KAFKA_URI], string(jsonBytes), "video")
+	message, err := utils.PublishMessage(c, configs.EnvVar[configs.KAFKA_URI], string(jsonBytes), "video")
 	if err != nil {
 		c.JSON(http.StatusExpectationFailed, gin.H{"error": message})
 		return
