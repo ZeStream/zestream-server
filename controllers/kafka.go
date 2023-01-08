@@ -25,16 +25,19 @@ func PublishMessage(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
 	jsonBytes, err := json.Marshal(request)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	message := utils.PublishMessage(configs.EnvVar[configs.KAFKA_URI], string(jsonBytes), "video")
-	if message != "success" {
-		c.JSON(http.StatusCreated, gin.H{"status": "success"})
+
+	err = utils.PublishMessage(c, configs.EnvVar[configs.KAFKA_URI], string(jsonBytes), "video")
+	if err != nil {
+		c.JSON(http.StatusExpectationFailed, gin.H{"error": err.Error()})
 		return
-	} else {
-		c.JSON(http.StatusExpectationFailed, gin.H{"error": message})
 	}
+
+	c.JSON(http.StatusCreated, gin.H{"status": "success"})
+	return
 }

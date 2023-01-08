@@ -1,12 +1,14 @@
 package routes
 
 import (
+	"zestream-server/constants"
+	"zestream-server/controllers"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/gin-gonic/gin"
-	"zestream-server/constants"
-	"zestream-server/controllers"
+	"github.com/google/uuid"
 )
 
 // Init function will perform all route operations
@@ -25,6 +27,19 @@ func Init() *gin.Engine {
 		} else {
 			c.Next()
 		}
+	})
+
+	// middleware attaching a new transaction id for every request to context
+	// transaction id will help to track all logs releated to any request better
+	r.Use(func(ctx *gin.Context) {
+		transactionID := ctx.Request.Header.Get("transaction-id")
+
+		if transactionID == "" {
+			transactionID = uuid.New().String()
+		}
+
+		ctx.Set(constants.TRANSACTION_ID_KEY, transactionID)
+		ctx.Next()
 	})
 
 	// Create a new session

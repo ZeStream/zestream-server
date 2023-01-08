@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
 	"net/url"
 	"os"
 	"path/filepath"
 	"zestream-server/constants"
+	"zestream-server/logger"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -23,23 +23,25 @@ import (
 type fileWalk chan string
 
 type Uploader interface {
-	Upload(walker fileWalk)
+	Upload(ctx context.Context, walker fileWalk)
 }
 
-func UploadToCloudStorage(uploader Uploader, path string) {
+func UploadToCloudStorage(ctx context.Context, uploader Uploader, path string) {
 	walker := make(fileWalk)
 	go func() {
 		//get files to upload via the channel
 		if err := filepath.Walk(path, walker.WalkFunc); err != nil {
-			log.Println("Walk failed: ", err)
+			logger.Error(ctx, "Walk Failed", logger.Z{
+				"error": err.Error(),
+				"path":  path,
+			})
 		}
 
 		close(walker)
 
 	}()
 
-	uploader.Upload(walker)
-
+	uploader.Upload(ctx, walker)
 }
 
 func (f fileWalk) WalkFunc(path string, info os.FileInfo, err error) error {
@@ -60,12 +62,15 @@ type AwsUploader struct {
 	Session *session.Session
 }
 
-func (a AwsUploader) Upload(walker fileWalk) {
+func (a AwsUploader) Upload(ctx context.Context, walker fileWalk) {
 	bucket := constants.S3_BUCKET_NAME
 	if bucket == "" {
-		log.Println("AWS Bucketname not available")
+		logger.Info(ctx, "AWS Bucketname not available", logger.Z{})
 	}
-	log.Printf("bucket %s", bucket)
+
+	logger.Info(ctx, "AWS bucketname", logger.Z{
+		"bucket_name": bucket,
+	})
 
 	prefix := a.Prefix
 
@@ -75,7 +80,11 @@ func (a AwsUploader) Upload(walker fileWalk) {
 
 		file, err := os.Open(path)
 		if err != nil {
-			log.Println("Failed opening file", path, err)
+			logger.Error(ctx, "Failed opening file", logger.Z{
+				"error": err.Error(),
+				"path":  path,
+			})
+
 			continue
 		}
 
@@ -88,12 +97,24 @@ func (a AwsUploader) Upload(walker fileWalk) {
 		if err != nil {
 			//close the file before error log
 			file.Close()
-			log.Println("Failed to upload", path, err)
+			logger.Error(ctx, "Failed to upload", logger.Z{
+				"error":     err.Error(),
+				"prefix":    prefix,
+				"file_name": filename,
+				"bucket":    bucket,
+			})
 		}
-		log.Println("Uploaded", path, result.Location)
+
+		logger.Info(ctx, "Video Uploaded successfully", logger.Z{
+			"path":   path,
+			"result": result,
+		})
 
 		if err := file.Close(); err != nil {
-			log.Println("Unable to close the file")
+			logger.Error(ctx, "Unable to close file", logger.Z{
+				"error": err.Error(),
+				"path":  path,
+			})
 		}
 	}
 }
@@ -104,42 +125,59 @@ type GcpUploader struct {
 	Client *storage.Client
 }
 
-func (g *GcpUploader) Upload(walker fileWalk) {
+func (g *GcpUploader) Upload(ctx context.Context, walker fileWalk) {
 	bucketName := constants.GCP_BUCKET_NAME
 	if bucketName == "" {
-		log.Println("GCP Bucketname not available")
+		logger.Error(ctx, "GCP bucketname not available", logger.Z{})
 	}
+
 	for path := range walker {
 		filename := filepath.Base(path)
-		fmt.Printf("Creating file /%v/%v\n", bucketName, filename)
-
-		ctx := context.Background()
+		logger.Info(ctx, "Creating file", logger.Z{
+			"bucket_name": bucketName,
+			"file_name":   filename,
+		})
 
 		wc := g.Client.Bucket(bucketName).Object(g.UploadPath + filename).NewWriter(ctx)
 		blob, err := os.Open(path)
 		if err != nil {
-			log.Println("Failed opening file", path, err)
+			logger.Error(ctx, "Failed opening file", logger.Z{
+				"error": err.Error(),
+				"path":  path,
+			})
+
 		}
 
 		if _, err := io.Copy(wc, blob); err != nil {
 			//close the blob before error log
 			blob.Close()
-			log.Println("Failed to upload", path, err)
+			logger.Error(ctx, "Failed to upload", logger.Z{
+				"error":       err.Error(),
+				"file_name":   filename,
+				"upload_path": g.UploadPath,
+			})
 		}
 
 		if err := wc.Close(); err != nil {
 			//close the file before error log
 			blob.Close()
-			log.Println("unable to close the bucket", err)
+			logger.Error(ctx, "Unable to close bucket", logger.Z{
+				"error":       err.Error(),
+				"bucker_name": bucketName,
+			})
 		} else {
-			log.Println("successfully uploaded ", path)
+			logger.Info(ctx, "successfully uploaded", logger.Z{
+				"path": path,
+			})
 		}
 
 		if err := blob.Close(); err != nil {
-			log.Println("unable to close the file")
+			logger.Error(ctx, "unable to close file", logger.Z{
+				"error":     err.Error(),
+				"file_name": filename,
+			})
 		}
 	}
-
 }
 
 type AzureUploader struct {
@@ -149,15 +187,16 @@ type AzureUploader struct {
 	AzureCredential *azblob.SharedKeyCredential
 }
 
-func (a AzureUploader) Upload(walker fileWalk) {
+func (a AzureUploader) Upload(ctx context.Context, walker fileWalk) {
 	accountName := constants.AZURE_ACCOUNT_NAME
 	azureEndpoint := constants.AZURE_ENDPOINT
 	if accountName == "" {
-		log.Println("azure account name not available")
+		logger.Error(ctx, "azure acount name not available", logger.Z{})
 	}
 	if azureEndpoint == "" {
-		log.Println("azure endpoint not available")
+		logger.Error(ctx, "azure endpoint not available", logger.Z{})
 	}
+
 	for path := range walker {
 		filename := filepath.Base(path)
 
@@ -165,12 +204,14 @@ func (a AzureUploader) Upload(walker fileWalk) {
 		u, _ := url.Parse(fmt.Sprint(azureEndpoint, a.ContainerName, "/", filename))
 		blockBlobUrl := azblob.NewBlockBlobURL(*u, azblob.NewPipeline(a.AzureCredential, azblob.PipelineOptions{}))
 
-		ctx := context.Background()
-
 		// Upload to data to blob storage
 		file, err := os.Open(path)
 		if err != nil {
-			log.Println("Failed to open file ", path)
+			logger.Info(ctx, "Failed to open file", logger.Z{
+				"error": err.Error(),
+				"path":  path,
+			})
+
 			continue
 		}
 
@@ -178,13 +219,21 @@ func (a AzureUploader) Upload(walker fileWalk) {
 		if err != nil {
 			//close the file before error log
 			file.Close()
-			log.Println("Failure to upload to azure container:")
+			logger.Error(ctx, "Failure in uploading to azure container", logger.Z{
+				"error": err.Error(),
+				"path":  path,
+			})
 		} else {
-			log.Printf("successfully uploaded %s ", path)
+			logger.Info(ctx, "successfully uploaded", logger.Z{
+				"path": path,
+			})
 		}
 
 		if err := file.Close(); err != nil {
-			log.Println("Unable to close the file ", path)
+			logger.Error(ctx, "Unable to close the file", logger.Z{
+				"error": err.Error(),
+				"path":  path,
+			})
 		}
 	}
 
