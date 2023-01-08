@@ -39,6 +39,4 @@ func PublishMessage(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, gin.H{"status": message})
-
-	return
 }
