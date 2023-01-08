@@ -3,8 +3,8 @@ package utils
 import (
 	"bytes"
 	"errors"
+	"log"
 	"os"
-	"os/exec"
 	"path"
 	"path/filepath"
 	"strings"
@@ -36,7 +36,7 @@ func GetDownloadFilePathName(fileName string) (string, error) {
 }
 
 /*
-GetOutputFilePathName returns the absolute path of the file present in downloads folder
+GetOutputFilePathName returns the absolute path of the file present in output folder
 takes fileName as argument
 */
 func GetOutputFilePathName(fileName string, postfix string) (string, error) {
@@ -104,9 +104,21 @@ func StringToArgsGenerator(args map[string]string) string {
 	return argsStr.String()
 }
 
-// DeleteFiles deletes the file/s given in the filePaths
-func DeleteFiles(filePaths string) error {
-	_, err := exec.Command("rm", strings.Split(filePaths, " ")...).Output()
+// DeleteFile deletes the given file
+func DeleteFile(filePath string) {
+	err := os.Remove(filePath)
+	if err != nil {
+		log.Println(err)
+	}
+}
 
-	return err
+// checkFileExistsAndAppendToBuffer checks if the given output file exits, then appends the
+// path to buffer.
+func CheckFileExistsAndAppendToBuffer(fileArgs *bytes.Buffer, outputPath string, fileTypes map[constants.FILE_TYPE]string) {
+	for _, filePrefix := range fileTypes {
+		var outputFile = outputPath + filePrefix
+		if IsFileValid(outputFile) {
+			fileArgs.WriteString(WrapStringInQuotes(outputFile))
+		}
+	}
 }

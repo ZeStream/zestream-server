@@ -12,7 +12,7 @@ import (
 	ffmpeg "github.com/u2takey/ffmpeg-go"
 )
 
-func GenerateDash(fileName string) {
+func generateDash(fileName string) {
 	targetFile, err := utils.GetDownloadFilePathName(fileName)
 	if err != nil {
 		log.Println(err)
@@ -39,6 +39,8 @@ func GenerateDash(fileName string) {
 	wg.Wait()
 
 	generateMPD(outputPath)
+
+	deleteVideoFiles(outputPath)
 }
 
 func generateAudioFiles(targetFile string, outputPath string, wg *sync.WaitGroup) {
@@ -118,8 +120,8 @@ func generateThumbnails(targetFile string, outputFile string, timeStamp string, 
 func generateMPD(outputPath string) {
 	var fileArgs bytes.Buffer
 
-	checkFileExistsAndAppendToBuffer(&fileArgs, outputPath, constants.AudioFileTypeMap)
-	checkFileExistsAndAppendToBuffer(&fileArgs, outputPath, constants.VideoFileTypeMap)
+	utils.CheckFileExistsAndAppendToBuffer(&fileArgs, outputPath, constants.AudioFileTypeMap)
+	utils.CheckFileExistsAndAppendToBuffer(&fileArgs, outputPath, constants.VideoFileTypeMap)
 
 	var filePaths = strings.TrimSuffix(fileArgs.String(), " ")
 
@@ -144,22 +146,13 @@ func generateMPD(outputPath string) {
 		log.Println(err)
 	}
 
-	err = utils.DeleteFiles(filePaths)
-
-	if err != nil {
-		log.Println(err)
-	}
-
 	log.Println(string(o))
 }
 
-// checkFileExistsAndAppendToBuffer checks if the given output file exits, then appends the
-// path to buffer.
-func checkFileExistsAndAppendToBuffer(fileArgs *bytes.Buffer, outputPath string, fileTypes map[constants.FILE_TYPE]string) {
-	for _, filePrefix := range fileTypes {
-		var outputFile = outputPath + filePrefix
-		if utils.IsFileValid(outputFile) {
-			fileArgs.WriteString(utils.WrapStringInQuotes(outputFile))
-		}
+func deleteVideoFiles(outputPath string) {
+	for _, filePrefix := range constants.VideoFileTypeMap {
+		var file = outputPath + filePrefix
+
+		utils.DeleteFile(file)
 	}
 }

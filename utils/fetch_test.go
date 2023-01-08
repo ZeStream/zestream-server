@@ -1,7 +1,10 @@
 package utils_test
 
 import (
+	"os"
+	"path"
 	"testing"
+	"zestream-server/constants"
 	"zestream-server/utils"
 )
 
@@ -28,5 +31,7 @@ func TestFetch(t *testing.T) {
 		t.Error("want true, got", isFileDownloaded)
 	}
 
-	utils.DeleteFiles(pathName)
+	cwd, _ := os.Getwd()
+
+	os.Remove(path.Join(cwd, constants.DOWNLOAD_FILE_PATH_PREFIX))
 }

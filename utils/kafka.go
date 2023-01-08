@@ -8,7 +8,7 @@ import (
 	"github.com/segmentio/kafka-go"
 )
 
-func PublishMessage(kafkaURI, topic string, message string) string {
+func PublishMessageK(kafkaURI, topic string, message string) string {
 
 	partition := 0
 

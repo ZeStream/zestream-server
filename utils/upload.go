@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"zestream-server/constants"
+	"zestream-server/configs"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -28,6 +28,7 @@ type Uploader interface {
 
 func UploadToCloudStorage(uploader Uploader, path string) {
 	walker := make(fileWalk)
+
 	go func() {
 		//get files to upload via the channel
 		if err := filepath.Walk(path, walker.WalkFunc); err != nil {
@@ -35,14 +36,13 @@ func UploadToCloudStorage(uploader Uploader, path string) {
 		}
 
 		close(walker)
-
 	}()
 
 	uploader.Upload(walker)
-
 }
 
 func (f fileWalk) WalkFunc(path string, info os.FileInfo, err error) error {
+
 	if err != nil {
 		return err
 	}
@@ -55,19 +55,17 @@ func (f fileWalk) WalkFunc(path string, info os.FileInfo, err error) error {
 }
 
 type AwsUploader struct {
-	Prefix string
-	//common session to be used by every upload
+	Prefix  string
+	VideoId string
 	Session *session.Session
 }
 
 func (a AwsUploader) Upload(walker fileWalk) {
-	bucket := constants.S3_BUCKET_NAME
+	bucket := configs.EnvVar[configs.AWS_S3_BUCKET_NAME]
+
 	if bucket == "" {
 		log.Println("AWS Bucketname not available")
 	}
-	log.Printf("bucket %s", bucket)
-
-	prefix := a.Prefix
 
 	uploader := s3manager.NewUploader(a.Session)
 	for path := range walker {
@@ -81,12 +79,11 @@ func (a AwsUploader) Upload(walker fileWalk) {
 
 		result, err := uploader.Upload(&s3manager.UploadInput{
 			Bucket: &bucket,
-			Key:    aws.String(filepath.Join(prefix, filename)),
+			Key:    aws.String(filepath.Join(a.Prefix, a.VideoId, filename)),
 			Body:   file,
 		})
 
 		if err != nil {
-			//close the file before error log
 			file.Close()
 			log.Println("Failed to upload", path, err)
 		}
@@ -100,22 +97,23 @@ func (a AwsUploader) Upload(walker fileWalk) {
 
 type GcpUploader struct {
 	UploadPath string
-	//common azure storage client to be used for every upload
-	Client *storage.Client
+	VideoId    string
+	Client     *storage.Client
 }
 
 func (g *GcpUploader) Upload(walker fileWalk) {
-	bucketName := constants.GCP_BUCKET_NAME
+	bucketName := configs.EnvVar[configs.GCP_BUCKET_NAME]
 	if bucketName == "" {
 		log.Println("GCP Bucketname not available")
 	}
+
 	for path := range walker {
 		filename := filepath.Base(path)
 		fmt.Printf("Creating file /%v/%v\n", bucketName, filename)
 
 		ctx := context.Background()
 
-		wc := g.Client.Bucket(bucketName).Object(g.UploadPath + filename).NewWriter(ctx)
+		wc := g.Client.Bucket(bucketName).Object(filepath.Join(g.UploadPath, g.VideoId, filename)).NewWriter(ctx)
 		blob, err := os.Open(path)
 		if err != nil {
 			log.Println("Failed opening file", path, err)
@@ -144,26 +142,28 @@ func (g *GcpUploader) Upload(walker fileWalk) {
 
 type AzureUploader struct {
 	ContainerName string
+	VideoId       string
 
-	//common for every upload process
-	AzureCredential *azblob.SharedKeyCredential
+	Credential *azblob.SharedKeyCredential
 }
 
 func (a AzureUploader) Upload(walker fileWalk) {
-	accountName := constants.AZURE_ACCOUNT_NAME
-	azureEndpoint := constants.AZURE_ENDPOINT
-	if accountName == "" {
-		log.Println("azure account name not available")
-	}
+	azureEndpoint := configs.EnvVar[configs.AZURE_ENDPOINT]
+
+	log.Println(azureEndpoint)
+
 	if azureEndpoint == "" {
-		log.Println("azure endpoint not available")
+		log.Println("Azure endpoint not available")
 	}
+
 	for path := range walker {
 		filename := filepath.Base(path)
 
 		//create indiviual url for every blob
-		u, _ := url.Parse(fmt.Sprint(azureEndpoint, a.ContainerName, "/", filename))
-		blockBlobUrl := azblob.NewBlockBlobURL(*u, azblob.NewPipeline(a.AzureCredential, azblob.PipelineOptions{}))
+		u, _ := url.Parse(azureEndpoint)
+		u = u.JoinPath(a.ContainerName, a.VideoId, filename)
+
+		blockBlobUrl := azblob.NewBlockBlobURL(*u, azblob.NewPipeline(a.Credential, azblob.PipelineOptions{}))
 
 		ctx := context.Background()
 
@@ -177,8 +177,8 @@ func (a AzureUploader) Upload(walker fileWalk) {
 		_, err = azblob.UploadFileToBlockBlob(ctx, file, blockBlobUrl, azblob.UploadToBlockBlobOptions{})
 		if err != nil {
 			//close the file before error log
-			file.Close()
-			log.Println("Failure to upload to azure container:")
+			defer file.Close()
+			log.Println("Failure to upload to azure container:", err)
 		} else {
 			log.Printf("successfully uploaded %s ", path)
 		}

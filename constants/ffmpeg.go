@@ -46,6 +46,7 @@ const (
 
 const DashOutputExt = ".mpd"
 const MP4Box = "MP4Box"
+const DEFAULT_THUMBNAIL_TIMESTAMP = "00:00:02"
 
 var AudioFileTypeMap = map[FILE_TYPE]string{
 	Audio192K: "_audio192k.m4a",
