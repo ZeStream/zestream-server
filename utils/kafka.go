@@ -8,8 +8,9 @@ import (
 	"github.com/segmentio/kafka-go"
 )
 
-func PublishMessage(ctx context.Context, kafkaURI, topic string, message string) error {
+func PublishMessage(ctx context.Context, kafkaURI, topic string, message string) (string, error) {
 	partition := 0
+	m := "success"
 
 	conn, err := kafka.DialLeader(context.Background(), "tcp", kafkaURI, topic, partition)
 	if err != nil {
@@ -20,7 +21,7 @@ func PublishMessage(ctx context.Context, kafkaURI, topic string, message string)
 			"input_message": message,
 		})
 
-		return err
+		return m, err
 	}
 
 	conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
@@ -35,7 +36,8 @@ func PublishMessage(ctx context.Context, kafkaURI, topic string, message string)
 			"input_message": message,
 		})
 
-		return err
+		m = "failed to write messages"
+		return m, err
 	}
 
 	if err := conn.Close(); err != nil {
@@ -46,8 +48,9 @@ func PublishMessage(ctx context.Context, kafkaURI, topic string, message string)
 			"input_message": message,
 		})
 
-		return err
+		m = "failed to close writer"
+		return m, err
 	}
 
-	return nil
+	return m, nil
 }
