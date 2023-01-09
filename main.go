@@ -45,5 +45,8 @@ func main() {
 		fmt.Println(err)
 	}
 
-	r.Run(":" + port)
+	err = r.Run(":" + port)
+	if err != nil {
+		fmt.Println(err)
+	}
 }

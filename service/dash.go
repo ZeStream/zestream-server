@@ -68,7 +68,7 @@ func generateThumbnailFiles(targetFile string, outputPath string, wg *sync.WaitG
 }
 
 func generateMultiBitrateAudio(targetFile string, outputFile string, fileType constants.FILE_TYPE, wg *sync.WaitGroup) {
-	ffmpeg.Input(targetFile, ffmpeg.KwArgs{
+	err := ffmpeg.Input(targetFile, ffmpeg.KwArgs{
 		constants.AudioKwargs[constants.HWAccel]: constants.FFmpegConfig[constants.HWAccel],
 	}).
 		Output(outputFile, ffmpeg.KwArgs{
@@ -78,13 +78,17 @@ func generateMultiBitrateAudio(targetFile string, outputFile string, fileType co
 			constants.AudioKwargs[constants.VideoExclusion]:    constants.FFmpegConfig[constants.VideoExclusion],
 		}).
 		OverWriteOutput().ErrorToStdOut().Run()
+	if err != nil {
+		m := "error generating multi bitrate audio"
+		log.Println(m, err)
+	}
 
 	wg.Done()
 }
 
 func generateMultiBitrateVideo(targetFile string, outputFile string, fileType constants.FILE_TYPE, withWatermark bool, watermark constants.WaterMark, wg *sync.WaitGroup) {
 
-	getInput(targetFile, withWatermark, watermark).
+	err := getInput(targetFile, withWatermark, watermark).
 		Output(outputFile, ffmpeg.KwArgs{
 			constants.VideoKwargs[constants.Preset]:         constants.FFmpegConfig[constants.Preset],
 			constants.VideoKwargs[constants.Tune]:           constants.FFmpegConfig[constants.Tune],
@@ -99,12 +103,17 @@ func generateMultiBitrateVideo(targetFile string, outputFile string, fileType co
 		ErrorToStdOut().
 		Run()
 
+	if err != nil {
+		m := "error generating multi bitrate video"
+		log.Println(m, err)
+	}
+
 	wg.Done()
 }
 
 // generateThumbnail generates a thumbnail at given timestamp, from the target file and write it to output file
 func generateThumbnails(targetFile string, outputFile string, timeStamp string, wg *sync.WaitGroup) {
-	ffmpeg.Input(targetFile).
+	err := ffmpeg.Input(targetFile).
 		Output(outputFile, ffmpeg.KwArgs{
 			constants.VideoKwargs[constants.ScreenShot]:  timeStamp,
 			constants.VideoKwargs[constants.VideoFrames]: constants.FFmpegConfig[constants.VideoFrames],
@@ -112,6 +121,11 @@ func generateThumbnails(targetFile string, outputFile string, timeStamp string, 
 		OverWriteOutput().
 		ErrorToStdOut().
 		Run()
+
+	if err != nil {
+		m := "error generating thumbnail"
+		log.Println(m, err)
+	}
 
 	wg.Done()
 }
