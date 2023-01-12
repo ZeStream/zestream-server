@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"os"
 	"zestream-server/configs"
 	"zestream-server/constants"
@@ -19,11 +20,18 @@ func main() {
 
 	go service.VideoProcessConsumer(ch, q)
 
-	r.Run(":" + port)
+	err := r.Run(":" + port)
+	failOnError(err)
 
 	defer func() {
 		defer conn.Close()
 		defer ch.Close()
 		defer cancel()
 	}()
+}
+
+func failOnError(err error) {
+	if err != nil {
+		log.Fatalln(err)
+	}
 }

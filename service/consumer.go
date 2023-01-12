@@ -52,5 +52,5 @@ func processVideo(video *types.Video) {
 
 	utils.Fetch(video.Src, fileName)
 
-	generateDash(fileName)
+	generateDash(fileName, video.Watermark)
 }

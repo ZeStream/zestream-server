@@ -7,12 +7,13 @@ import (
 	"strings"
 	"sync"
 	"zestream-server/constants"
+	"zestream-server/types"
 	"zestream-server/utils"
 
 	ffmpeg "github.com/u2takey/ffmpeg-go"
 )
 
-func generateDash(fileName string) {
+func generateDash(fileName string, watermark types.WaterMark) {
 	targetFile, err := utils.GetDownloadFilePathName(fileName)
 	if err != nil {
 		log.Println(err)
@@ -32,7 +33,7 @@ func generateDash(fileName string) {
 
 	generateAudioFiles(targetFile, outputPath, &wg)
 
-	generateVideoFiles(targetFile, outputPath, &wg)
+	generateVideoFiles(targetFile, outputPath, watermark, &wg)
 
 	generateThumbnailFiles(targetFile, outputPath, &wg)
 
@@ -51,11 +52,11 @@ func generateAudioFiles(targetFile string, outputPath string, wg *sync.WaitGroup
 	}
 }
 
-func generateVideoFiles(targetFile string, outputPath string, wg *sync.WaitGroup) {
+func generateVideoFiles(targetFile string, outputPath string, watermark types.WaterMark, wg *sync.WaitGroup) {
 	for fileType, filePrefix := range constants.VideoFileTypeMap {
 		var outputFile = outputPath + filePrefix
 
-		go generateMultiBitrateVideo(targetFile, outputFile, fileType, wg)
+		go generateMultiBitrateVideo(targetFile, outputFile, fileType, watermark, wg)
 	}
 }
 
@@ -68,7 +69,7 @@ func generateThumbnailFiles(targetFile string, outputPath string, wg *sync.WaitG
 }
 
 func generateMultiBitrateAudio(targetFile string, outputFile string, fileType constants.FILE_TYPE, wg *sync.WaitGroup) {
-	ffmpeg.Input(targetFile, ffmpeg.KwArgs{
+	err := ffmpeg.Input(targetFile, ffmpeg.KwArgs{
 		constants.AudioKwargs[constants.HWAccel]: constants.FFmpegConfig[constants.HWAccel],
 	}).
 		Output(outputFile, ffmpeg.KwArgs{
@@ -78,12 +79,17 @@ func generateMultiBitrateAudio(targetFile string, outputFile string, fileType co
 			constants.AudioKwargs[constants.VideoExclusion]:    constants.FFmpegConfig[constants.VideoExclusion],
 		}).
 		OverWriteOutput().ErrorToStdOut().Run()
+	if err != nil {
+		m := "error generating multi bitrate audio"
+		log.Println(m, err)
+	}
 
 	wg.Done()
 }
 
-func generateMultiBitrateVideo(targetFile string, outputFile string, fileType constants.FILE_TYPE, wg *sync.WaitGroup) {
-	ffmpeg.Input(targetFile).
+func generateMultiBitrateVideo(targetFile string, outputFile string, fileType constants.FILE_TYPE, watermark types.WaterMark, wg *sync.WaitGroup) {
+
+	err := getInput(targetFile, watermark).
 		Output(outputFile, ffmpeg.KwArgs{
 			constants.VideoKwargs[constants.Preset]:         constants.FFmpegConfig[constants.Preset],
 			constants.VideoKwargs[constants.Tune]:           constants.FFmpegConfig[constants.Tune],
@@ -98,12 +104,17 @@ func generateMultiBitrateVideo(targetFile string, outputFile string, fileType co
 		ErrorToStdOut().
 		Run()
 
+	if err != nil {
+		m := "error generating multi bitrate video"
+		log.Println(m, err)
+	}
+
 	wg.Done()
 }
 
 // generateThumbnail generates a thumbnail at given timestamp, from the target file and write it to output file
 func generateThumbnails(targetFile string, outputFile string, timeStamp string, wg *sync.WaitGroup) {
-	ffmpeg.Input(targetFile).
+	err := ffmpeg.Input(targetFile).
 		Output(outputFile, ffmpeg.KwArgs{
 			constants.VideoKwargs[constants.ScreenShot]:  timeStamp,
 			constants.VideoKwargs[constants.VideoFrames]: constants.FFmpegConfig[constants.VideoFrames],
@@ -111,6 +122,11 @@ func generateThumbnails(targetFile string, outputFile string, timeStamp string, 
 		OverWriteOutput().
 		ErrorToStdOut().
 		Run()
+
+	if err != nil {
+		m := "error generating thumbnail"
+		log.Println(m, err)
+	}
 
 	wg.Done()
 }
@@ -149,10 +165,50 @@ func generateMPD(outputPath string) {
 	log.Println(string(o))
 }
 
+// deleteVideoFiles deletes the videos given in the path
 func deleteVideoFiles(outputPath string) {
 	for _, filePrefix := range constants.VideoFileTypeMap {
 		var file = outputPath + filePrefix
 
 		utils.DeleteFile(file)
+	}
+}
+
+// Returns input based on if the watermark is needed or not
+func getInput(targetFile string, watermark types.WaterMark) *ffmpeg.Stream {
+
+	input := ffmpeg.Input(targetFile)
+
+	if !watermark.IsEmpty() {
+		watermarkPath, err := utils.GetDownloadFilePathName(watermark.ID)
+		if err != nil {
+			log.Println(err)
+		}
+
+		filterArgs := "" + watermark.Position.X + ":" + watermark.Position.Y + ""
+
+		return ffmpeg.Filter(
+			[]*ffmpeg.Stream{
+				input,
+				getOverlay(watermarkPath, watermark),
+			}, constants.Overlay, ffmpeg.Args{filterArgs})
+	}
+	return input
+}
+
+// Returns an overlay of watermark which can be used in Filter
+func getOverlay(watermarkPath string, watermark types.WaterMark) *ffmpeg.Stream {
+	overlayArgs := "" + watermark.Dimension.X + ":" + watermark.Dimension.Y + ""
+	return ffmpeg.Input(watermarkPath).Filter(constants.Scale, ffmpeg.Args{overlayArgs})
+}
+
+// checkFileExistsAndAppendToBuffer checks if the given output file exits, then appends the
+// path to buffer.
+func checkFileExistsAndAppendToBuffer(fileArgs *bytes.Buffer, outputPath string, fileTypes map[constants.FILE_TYPE]string) {
+	for _, filePrefix := range fileTypes {
+		var outputFile = outputPath + filePrefix
+		if utils.IsFileValid(outputFile) {
+			fileArgs.WriteString(utils.WrapStringInQuotes(outputFile))
+		}
 	}
 }
