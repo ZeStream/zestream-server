@@ -1,17 +1,18 @@
 package types
 
 type Video struct {
-	ID        string    `json:"id"`
-	Src       string    `json:"src"`
-	Type      string    `json:"type"`
+	ID        string    `json:"id" binding:"required"`
+	Src       string    `json:"src" binding:"required,url"`
+	Type      string    `json:"type" binding:"required"`
 	Watermark WaterMark `json:"watermark"`
 }
 
 type WaterMark struct {
-	ID        string    `json:"id"`
-	Src       string    `json:"src"`
-	Dimension Dimension `json:"dimension"`
-	Position  Dimension `json:"position"`
+	ID        string    `json:"id" binding:"required_if=Watermark 1"`
+	Src       string    `json:"src" binding:"required_if=Watermark 1"`
+	Type      string    `json:"type" binding:"required_if=Watermark 1"`
+	Dimension Dimension `json:"dimension" binding:"required_if=Watermark 1"`
+	Position  Dimension `json:"position" binding:"required_if=Watermark 1"`
 }
 
 type Dimension struct {

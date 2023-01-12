@@ -3,6 +3,10 @@ package service
 import (
 	"encoding/json"
 	"log"
+	"os"
+	"strconv"
+	"zestream-server/configs"
+	"zestream-server/constants"
 	"zestream-server/types"
 	"zestream-server/utils"
 
@@ -12,14 +16,25 @@ import (
 func VideoProcessConsumer(ch *rmq.Channel, q *rmq.Queue) {
 	var forever chan struct{}
 
+	maxProcesses, err := strconv.Atoi(configs.EnvVar[configs.MAX_CONCURRENT_PROCESSING])
+	if err != nil {
+		maxProcesses = 1
+	}
+
+	ch.Qos(
+		maxProcesses, // prefetch count
+		0,            // prefetch size
+		false,        // global
+	)
+
 	msgs, err := ch.Consume(
-		q.Name, // queue
-		"",     // consumer
-		true,   // auto-ack
-		false,  // exclusive
-		false,  // no-local
-		false,  // no-wait
-		nil,    // args
+		q.Name,                 // queue
+		"VideoProcessConsumer", // consumer
+		true,                   // auto-ack
+		false,                  // exclusive
+		false,                  // no-local
+		false,                  // no-wait
+		nil,                    // args
 	)
 
 	if err != nil {
@@ -27,7 +42,11 @@ func VideoProcessConsumer(ch *rmq.Channel, q *rmq.Queue) {
 	}
 
 	go func() {
+		guard := make(chan int, maxProcesses)
+
 		for d := range msgs {
+			guard <- 1
+
 			var video types.Video
 
 			log.Println("Request Consumed: ", video)
@@ -38,19 +57,36 @@ func VideoProcessConsumer(ch *rmq.Channel, q *rmq.Queue) {
 				continue
 			}
 
-			processVideo(&video)
+			go processVideo(&video, guard)
 		}
 	}()
 
 	<-forever
 }
 
-func processVideo(video *types.Video) {
+func processVideo(video *types.Video, guard <-chan int) {
 	log.Println("Processing Video: ", video)
 
-	var fileName = video.ID + "." + video.Type
+	var videoFileName = video.ID + "." + video.Type
+	var waterMarkFileName = video.Watermark.ID + "." + video.Watermark.Type
 
-	utils.Fetch(video.Src, fileName)
+	utils.Fetch(video.Src, videoFileName)
 
-	generateDash(fileName, video.Watermark)
+	if !video.Watermark.IsEmpty() {
+		utils.Fetch(video.Watermark.Src, waterMarkFileName)
+	}
+
+	generateDash(videoFileName, video.Watermark)
+
+	uploader := utils.GetUploader(constants.CLOUD_CONTAINER_NAME, video.ID)
+
+	outputDir, err := utils.GetOutputFilePathName(videoFileName, "")
+	utils.LogErr(err)
+
+	err = os.RemoveAll(outputDir)
+	utils.LogErr(err)
+
+	utils.UploadToCloudStorage(uploader, outputDir)
+
+	<-guard
 }

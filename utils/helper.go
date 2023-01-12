@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/rand"
 	"encoding/binary"
+	"log"
 	math_rand "math/rand"
 	"strconv"
 )
@@ -36,4 +37,10 @@ func WrapStringInQuotes(str string) string {
 	buff.WriteString(" ")
 
 	return buff.String()
+}
+
+func LogErr(err error) {
+	if err != nil {
+		log.Println(err)
+	}
 }

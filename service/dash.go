@@ -42,6 +42,7 @@ func generateDash(fileName string, watermark types.WaterMark) {
 	generateMPD(outputPath)
 
 	deleteVideoFiles(outputPath)
+	utils.DeleteFile(targetFile)
 }
 
 func generateAudioFiles(targetFile string, outputPath string, wg *sync.WaitGroup) {
@@ -78,7 +79,7 @@ func generateMultiBitrateAudio(targetFile string, outputFile string, fileType co
 			constants.AudioKwargs[constants.AllowSoftEncoding]: constants.FFmpegConfig[constants.AllowSoftEncoding],
 			constants.AudioKwargs[constants.VideoExclusion]:    constants.FFmpegConfig[constants.VideoExclusion],
 		}).
-		OverWriteOutput().ErrorToStdOut().Run()
+		OverWriteOutput().Run()
 	if err != nil {
 		m := "error generating multi bitrate audio"
 		log.Println(m, err)
@@ -101,7 +102,6 @@ func generateMultiBitrateVideo(targetFile string, outputFile string, fileType co
 			constants.VideoKwargs[constants.VideoFormat]:    constants.FFmpegConfig[constants.VideoFormat],
 		}).
 		OverWriteOutput().
-		ErrorToStdOut().
 		Run()
 
 	if err != nil {
@@ -120,7 +120,6 @@ func generateThumbnails(targetFile string, outputFile string, timeStamp string, 
 			constants.VideoKwargs[constants.VideoFrames]: constants.FFmpegConfig[constants.VideoFrames],
 		}).
 		OverWriteOutput().
-		ErrorToStdOut().
 		Run()
 
 	if err != nil {

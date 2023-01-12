@@ -26,6 +26,37 @@ type Uploader interface {
 	Upload(walker fileWalk)
 }
 
+func GetUploader(containerName string, videoId string) Uploader {
+
+	cloudSession := configs.GetCloudSession()
+
+	if configs.EnvVar[configs.AWS_ACCESS_KEY_ID] != "" {
+		return AwsUploader{
+			ContainerName: containerName,
+			VideoId:       videoId,
+			Session:       cloudSession.AWSSession,
+		}
+	}
+
+	if configs.EnvVar[configs.GCP_PROJECT_ID] != "" {
+		return &GcpUploader{
+			ContainerName: containerName,
+			VideoId:       videoId,
+			Client:        cloudSession.GCPSession,
+		}
+	}
+
+	if configs.EnvVar[configs.AZURE_ACCESS_KEY] != "" {
+		return AzureUploader{
+			ContainerName: containerName,
+			VideoId:       videoId,
+			Credential:    cloudSession.AzureSession,
+		}
+	}
+
+	return nil
+}
+
 func UploadToCloudStorage(uploader Uploader, path string) {
 	walker := make(fileWalk)
 
@@ -55,9 +86,9 @@ func (f fileWalk) WalkFunc(path string, info os.FileInfo, err error) error {
 }
 
 type AwsUploader struct {
-	Prefix  string
-	VideoId string
-	Session *session.Session
+	ContainerName string
+	VideoId       string
+	Session       *session.Session
 }
 
 func (a AwsUploader) Upload(walker fileWalk) {
@@ -68,6 +99,7 @@ func (a AwsUploader) Upload(walker fileWalk) {
 	}
 
 	uploader := s3manager.NewUploader(a.Session)
+
 	for path := range walker {
 		filename := filepath.Base(path)
 
@@ -79,7 +111,7 @@ func (a AwsUploader) Upload(walker fileWalk) {
 
 		result, err := uploader.Upload(&s3manager.UploadInput{
 			Bucket: &bucket,
-			Key:    aws.String(filepath.Join(a.Prefix, a.VideoId, filename)),
+			Key:    aws.String(filepath.Join(a.ContainerName, a.VideoId, filename)),
 			Body:   file,
 		})
 
@@ -96,9 +128,9 @@ func (a AwsUploader) Upload(walker fileWalk) {
 }
 
 type GcpUploader struct {
-	UploadPath string
-	VideoId    string
-	Client     *storage.Client
+	ContainerName string
+	VideoId       string
+	Client        *storage.Client
 }
 
 func (g *GcpUploader) Upload(walker fileWalk) {
@@ -107,13 +139,16 @@ func (g *GcpUploader) Upload(walker fileWalk) {
 		log.Println("GCP Bucketname not available")
 	}
 
+	ctx := context.Background()
+
+	bucket := g.Client.Bucket(bucketName)
+
 	for path := range walker {
 		filename := filepath.Base(path)
 		fmt.Printf("Creating file /%v/%v\n", bucketName, filename)
 
-		ctx := context.Background()
+		wc := bucket.Object(filepath.Join(g.ContainerName, g.VideoId, filename)).NewWriter(ctx)
 
-		wc := g.Client.Bucket(bucketName).Object(filepath.Join(g.UploadPath, g.VideoId, filename)).NewWriter(ctx)
 		blob, err := os.Open(path)
 		if err != nil {
 			log.Println("Failed opening file", path, err)
@@ -143,8 +178,7 @@ func (g *GcpUploader) Upload(walker fileWalk) {
 type AzureUploader struct {
 	ContainerName string
 	VideoId       string
-
-	Credential *azblob.SharedKeyCredential
+	Credential    *azblob.SharedKeyCredential
 }
 
 func (a AzureUploader) Upload(walker fileWalk) {
@@ -177,8 +211,8 @@ func (a AzureUploader) Upload(walker fileWalk) {
 		_, err = azblob.UploadFileToBlockBlob(ctx, file, blockBlobUrl, azblob.UploadToBlockBlobOptions{})
 		if err != nil {
 			//close the file before error log
-			defer file.Close()
 			log.Println("Failure to upload to azure container:", err)
+			file.Close()
 		} else {
 			log.Printf("successfully uploaded %s ", path)
 		}

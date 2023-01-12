@@ -14,6 +14,7 @@ const IDLE_TIMEOUT = 30 * time.Second
 // folders
 const DOWNLOAD_FILE_PATH_PREFIX = "downloads"
 const OUTPUT_FILE_PATH_PREFIX = "output"
+const CLOUD_CONTAINER_NAME = "zestream-dash"
 const DOWNLOAD_FOLDER_PERM = 0666
 
 const AWS_ENDPOINT = "http://localhost:4566"

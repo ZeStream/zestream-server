@@ -16,7 +16,10 @@ func main() {
 
 	port := os.Getenv(constants.PORT)
 
+	// initialize RabbitMQ
 	conn, ch, q, _, cancel := configs.InitRabbitMQ()
+
+	configs.InitCloud()
 
 	go service.VideoProcessConsumer(ch, q)
 
