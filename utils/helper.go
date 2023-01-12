@@ -23,7 +23,7 @@ func VideoIDGen(fileExtension string) string {
 	math_rand.Seed(i)
 
 	// Generate a 8 digit random number
-	randomNumber := math_rand.Intn(100000000) + 10000000
+	randomNumber := math_rand.Intn(99999999) + 10000000
 
 	// VideoID = (8-digit random number) + (file Name)
 	return strconv.Itoa(randomNumber) + fileExtension
