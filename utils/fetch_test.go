@@ -33,7 +33,7 @@ func TestFetch(t *testing.T) {
 
 	cwd, _ := os.Getwd()
 
-	err = os.Remove(path.Join(cwd, constants.DOWNLOAD_FILE_PATH_PREFIX))
+	err = os.RemoveAll(path.Join(cwd, constants.DOWNLOAD_FILE_PATH_PREFIX))
 
 	if err != nil {
 		t.Fatal(err)
