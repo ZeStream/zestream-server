@@ -38,9 +38,5 @@ var WaterMarkPositionMap = map[DIMENSION]string{
 }
 
 func (w *WaterMark) IsEmpty() bool {
-	if w.ID == "" {
-		return true
-	}
-
-	return false
+	return w.ID == ""
 }

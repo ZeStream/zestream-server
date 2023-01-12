@@ -21,11 +21,12 @@ func VideoProcessConsumer(ch *rmq.Channel, q *rmq.Queue) {
 		maxProcesses = 1
 	}
 
-	ch.Qos(
+	err = ch.Qos(
 		maxProcesses, // prefetch count
 		0,            // prefetch size
 		false,        // global
 	)
+	utils.LogErr(err)
 
 	msgs, err := ch.Consume(
 		q.Name,                 // queue
@@ -70,10 +71,15 @@ func processVideo(video *types.Video, guard <-chan int) {
 	var videoFileName = video.ID + "." + video.Type
 	var waterMarkFileName = video.Watermark.ID + "." + video.Watermark.Type
 
-	utils.Fetch(video.Src, videoFileName)
+	err := utils.Fetch(video.Src, videoFileName)
+	if err != nil {
+		utils.LogErr(err)
+		return
+	}
 
 	if !video.Watermark.IsEmpty() {
-		utils.Fetch(video.Watermark.Src, waterMarkFileName)
+		err = utils.Fetch(video.Watermark.Src, waterMarkFileName)
+		utils.LogErr(err)
 	}
 
 	generateDash(videoFileName, video.Watermark)

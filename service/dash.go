@@ -200,14 +200,3 @@ func getOverlay(watermarkPath string, watermark types.WaterMark) *ffmpeg.Stream 
 	overlayArgs := "" + watermark.Dimension.X + ":" + watermark.Dimension.Y + ""
 	return ffmpeg.Input(watermarkPath).Filter(constants.Scale, ffmpeg.Args{overlayArgs})
 }
-
-// checkFileExistsAndAppendToBuffer checks if the given output file exits, then appends the
-// path to buffer.
-func checkFileExistsAndAppendToBuffer(fileArgs *bytes.Buffer, outputPath string, fileTypes map[constants.FILE_TYPE]string) {
-	for _, filePrefix := range fileTypes {
-		var outputFile = outputPath + filePrefix
-		if utils.IsFileValid(outputFile) {
-			fileArgs.WriteString(utils.WrapStringInQuotes(outputFile))
-		}
-	}
-}

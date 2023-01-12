@@ -39,6 +39,7 @@ func WrapStringInQuotes(str string) string {
 	return buff.String()
 }
 
+// LogErr logs the given error
 func LogErr(err error) {
 	if err != nil {
 		log.Println(err)
