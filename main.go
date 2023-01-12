@@ -1,17 +1,20 @@
 package main
 
 import (
+	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"zestream-server/configs"
 	"zestream-server/constants"
+	"zestream-server/logger"
 	"zestream-server/routes"
 )
 
 func main() {
 	configs.LoadEnv()
+
+	logger.Init("zestream-server", os.Getenv("LOG_LEVEL"))
 
 	r := routes.Init()
 
@@ -19,7 +22,10 @@ func main() {
 
 	kafkaURI := os.Getenv("KAFKA_URI")
 	if kafkaURI == "" {
-		log.Fatal("Error: KAFKA_URI environment variable not set")
+		logger.Error(context.TODO(), "KAFKA_URI environment variable not set", logger.Z{
+			"kafka_uri": os.Getenv("KAFKA_URI"),
+		})
+		panic("KAFKA_URI environment variable not set")
 	}
 
 	if port == "" {
