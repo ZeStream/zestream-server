@@ -46,31 +46,9 @@ const (
 
 const DashOutputExt = ".mpd"
 const MP4Box = "MP4Box"
+const DEFAULT_THUMBNAIL_TIMESTAMP = "00:00:02"
 const Overlay = "overlay"
 const Scale = "scale"
-
-type DIMENSION int
-
-const (
-	X DIMENSION = iota
-	Y
-)
-
-var WaterMarkSizeMap = map[DIMENSION]string{
-	X: "x",
-	Y: "y",
-}
-
-var WaterMarkPositionMap = map[DIMENSION]string{
-	X: "x",
-	Y: "y",
-}
-
-type WaterMark struct {
-	FileName  string
-	Dimension map[string]int
-	Position  map[string]int
-}
 
 var AudioFileTypeMap = map[FILE_TYPE]string{
 	Audio192K: "_audio192k.m4a",

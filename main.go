@@ -1,13 +1,12 @@
 package main
 
 import (
-	"fmt"
 	"log"
-	"net/http"
 	"os"
 	"zestream-server/configs"
 	"zestream-server/constants"
 	"zestream-server/routes"
+	"zestream-server/service"
 )
 
 func main() {
@@ -17,30 +16,25 @@ func main() {
 
 	port := os.Getenv(constants.PORT)
 
-	kafkaURI := os.Getenv("KAFKA_URI")
-	if kafkaURI == "" {
-		log.Fatal("Error: KAFKA_URI environment variable not set")
-	}
+	// initialize RabbitMQ
+	conn, ch, q, _, cancel := configs.InitRabbitMQ()
 
-	if port == "" {
-		port = constants.DEFAULT_PORT
-	}
+	configs.InitCloud()
 
-	server := &http.Server{
-		Addr:         port,
-		ReadTimeout:  constants.READ_TIMEOUT,
-		WriteTimeout: constants.WRITE_TIMEOUT,
-		IdleTimeout:  constants.IDLE_TIMEOUT,
-	}
+	go service.VideoProcessConsumer(ch, q)
 
-	err := server.ListenAndServe()
+	err := r.Run(":" + port)
+	failOnError(err)
 
+	defer func() {
+		defer conn.Close()
+		defer ch.Close()
+		defer cancel()
+	}()
+}
+
+func failOnError(err error) {
 	if err != nil {
-		fmt.Println(err)
-	}
-
-	err = r.Run(":" + port)
-	if err != nil {
-		fmt.Println(err)
+		log.Fatalln(err)
 	}
 }

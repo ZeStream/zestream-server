@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/rand"
 	"encoding/binary"
+	"log"
 	math_rand "math/rand"
 	"strconv"
 )
@@ -22,7 +23,7 @@ func VideoIDGen(fileExtension string) string {
 	math_rand.Seed(i)
 
 	// Generate a 8 digit random number
-	randomNumber := math_rand.Intn(100000000) + 10000000
+	randomNumber := math_rand.Intn(99999999-10000000) + 10000000
 
 	// VideoID = (8-digit random number) + (file Name)
 	return strconv.Itoa(randomNumber) + fileExtension
@@ -36,4 +37,11 @@ func WrapStringInQuotes(str string) string {
 	buff.WriteString(" ")
 
 	return buff.String()
+}
+
+// LogErr logs the given error
+func LogErr(err error) {
+	if err != nil {
+		log.Println(err)
+	}
 }

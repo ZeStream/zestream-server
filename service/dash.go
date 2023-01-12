@@ -4,17 +4,16 @@ import (
 	"bytes"
 	"log"
 	"os/exec"
-	"strconv"
 	"strings"
 	"sync"
 	"zestream-server/constants"
+	"zestream-server/types"
 	"zestream-server/utils"
 
 	ffmpeg "github.com/u2takey/ffmpeg-go"
 )
 
-func GenerateDash(fileName string, watermark constants.WaterMark, withWatermark bool) {
-
+func generateDash(fileName string, watermark types.WaterMark) {
 	targetFile, err := utils.GetDownloadFilePathName(fileName)
 	if err != nil {
 		log.Println(err)
@@ -34,13 +33,16 @@ func GenerateDash(fileName string, watermark constants.WaterMark, withWatermark 
 
 	generateAudioFiles(targetFile, outputPath, &wg)
 
-	generateVideoFiles(targetFile, outputPath, withWatermark, watermark, &wg)
+	generateVideoFiles(targetFile, outputPath, watermark, &wg)
 
 	generateThumbnailFiles(targetFile, outputPath, &wg)
 
 	wg.Wait()
 
 	generateMPD(outputPath)
+
+	deleteVideoFiles(outputPath)
+	utils.DeleteFile(targetFile)
 }
 
 func generateAudioFiles(targetFile string, outputPath string, wg *sync.WaitGroup) {
@@ -51,11 +53,11 @@ func generateAudioFiles(targetFile string, outputPath string, wg *sync.WaitGroup
 	}
 }
 
-func generateVideoFiles(targetFile string, outputPath string, withWatermark bool, watermark constants.WaterMark, wg *sync.WaitGroup) {
+func generateVideoFiles(targetFile string, outputPath string, watermark types.WaterMark, wg *sync.WaitGroup) {
 	for fileType, filePrefix := range constants.VideoFileTypeMap {
 		var outputFile = outputPath + filePrefix
 
-		go generateMultiBitrateVideo(targetFile, outputFile, fileType, withWatermark, watermark, wg)
+		go generateMultiBitrateVideo(targetFile, outputFile, fileType, watermark, wg)
 	}
 }
 
@@ -77,7 +79,7 @@ func generateMultiBitrateAudio(targetFile string, outputFile string, fileType co
 			constants.AudioKwargs[constants.AllowSoftEncoding]: constants.FFmpegConfig[constants.AllowSoftEncoding],
 			constants.AudioKwargs[constants.VideoExclusion]:    constants.FFmpegConfig[constants.VideoExclusion],
 		}).
-		OverWriteOutput().ErrorToStdOut().Run()
+		OverWriteOutput().Run()
 	if err != nil {
 		m := "error generating multi bitrate audio"
 		log.Println(m, err)
@@ -86,9 +88,9 @@ func generateMultiBitrateAudio(targetFile string, outputFile string, fileType co
 	wg.Done()
 }
 
-func generateMultiBitrateVideo(targetFile string, outputFile string, fileType constants.FILE_TYPE, withWatermark bool, watermark constants.WaterMark, wg *sync.WaitGroup) {
+func generateMultiBitrateVideo(targetFile string, outputFile string, fileType constants.FILE_TYPE, watermark types.WaterMark, wg *sync.WaitGroup) {
 
-	err := getInput(targetFile, withWatermark, watermark).
+	err := getInput(targetFile, watermark).
 		Output(outputFile, ffmpeg.KwArgs{
 			constants.VideoKwargs[constants.Preset]:         constants.FFmpegConfig[constants.Preset],
 			constants.VideoKwargs[constants.Tune]:           constants.FFmpegConfig[constants.Tune],
@@ -100,7 +102,6 @@ func generateMultiBitrateVideo(targetFile string, outputFile string, fileType co
 			constants.VideoKwargs[constants.VideoFormat]:    constants.FFmpegConfig[constants.VideoFormat],
 		}).
 		OverWriteOutput().
-		ErrorToStdOut().
 		Run()
 
 	if err != nil {
@@ -119,7 +120,6 @@ func generateThumbnails(targetFile string, outputFile string, timeStamp string, 
 			constants.VideoKwargs[constants.VideoFrames]: constants.FFmpegConfig[constants.VideoFrames],
 		}).
 		OverWriteOutput().
-		ErrorToStdOut().
 		Run()
 
 	if err != nil {
@@ -135,8 +135,8 @@ func generateThumbnails(targetFile string, outputFile string, timeStamp string, 
 func generateMPD(outputPath string) {
 	var fileArgs bytes.Buffer
 
-	checkFileExistsAndAppendToBuffer(&fileArgs, outputPath, constants.AudioFileTypeMap)
-	checkFileExistsAndAppendToBuffer(&fileArgs, outputPath, constants.VideoFileTypeMap)
+	utils.CheckFileExistsAndAppendToBuffer(&fileArgs, outputPath, constants.AudioFileTypeMap)
+	utils.CheckFileExistsAndAppendToBuffer(&fileArgs, outputPath, constants.VideoFileTypeMap)
 
 	var filePaths = strings.TrimSuffix(fileArgs.String(), " ")
 
@@ -161,49 +161,42 @@ func generateMPD(outputPath string) {
 		log.Println(err)
 	}
 
-	err = utils.DeleteFiles(filePaths)
-
-	if err != nil {
-		log.Println(err)
-	}
-
 	log.Println(string(o))
 }
 
+// deleteVideoFiles deletes the videos given in the path
+func deleteVideoFiles(outputPath string) {
+	for _, filePrefix := range constants.VideoFileTypeMap {
+		var file = outputPath + filePrefix
+
+		utils.DeleteFile(file)
+	}
+}
+
 // Returns input based on if the watermark is needed or not
-func getInput(targetFile string, withWatermark bool, watermark constants.WaterMark) *ffmpeg.Stream {
+func getInput(targetFile string, watermark types.WaterMark) *ffmpeg.Stream {
 
 	input := ffmpeg.Input(targetFile)
 
-	if withWatermark {
-		watermarkFile, err := utils.GetDownloadFilePathName(watermark.FileName)
+	if !watermark.IsEmpty() {
+		watermarkPath, err := utils.GetDownloadFilePathName(watermark.ID)
 		if err != nil {
 			log.Println(err)
 		}
-		filterArgs := "" + strconv.Itoa(watermark.Position[constants.WaterMarkPositionMap[constants.X]]) + ":" + strconv.Itoa(watermark.Position[constants.WaterMarkPositionMap[constants.Y]]) + ""
+
+		filterArgs := "" + watermark.Position.X + ":" + watermark.Position.Y + ""
 
 		return ffmpeg.Filter(
 			[]*ffmpeg.Stream{
 				input,
-				getOverlay(watermarkFile, watermark.Dimension),
+				getOverlay(watermarkPath, watermark),
 			}, constants.Overlay, ffmpeg.Args{filterArgs})
 	}
 	return input
 }
 
 // Returns an overlay of watermark which can be used in Filter
-func getOverlay(waterMarkFile string, watermarkDimension map[string]int) *ffmpeg.Stream {
-	overlayArgs := "" + strconv.Itoa(watermarkDimension[constants.WaterMarkSizeMap[constants.X]]) + ":" + strconv.Itoa(watermarkDimension[constants.WaterMarkSizeMap[constants.Y]]) + ""
-	return ffmpeg.Input(waterMarkFile).Filter(constants.Scale, ffmpeg.Args{overlayArgs})
-}
-
-// checkFileExistsAndAppendToBuffer checks if the given output file exits, then appends the
-// path to buffer.
-func checkFileExistsAndAppendToBuffer(fileArgs *bytes.Buffer, outputPath string, fileTypes map[constants.FILE_TYPE]string) {
-	for _, filePrefix := range fileTypes {
-		var outputFile = outputPath + filePrefix
-		if utils.IsFileValid(outputFile) {
-			fileArgs.WriteString(utils.WrapStringInQuotes(outputFile))
-		}
-	}
+func getOverlay(watermarkPath string, watermark types.WaterMark) *ffmpeg.Stream {
+	overlayArgs := "" + watermark.Dimension.X + ":" + watermark.Dimension.Y + ""
+	return ffmpeg.Input(watermarkPath).Filter(constants.Scale, ffmpeg.Args{overlayArgs})
 }
