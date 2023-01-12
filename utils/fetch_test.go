@@ -28,5 +28,8 @@ func TestFetch(t *testing.T) {
 		t.Error("want true, got", isFileDownloaded)
 	}
 
-	utils.DeleteFiles(pathName)
+	err = utils.DeleteFiles(pathName)
+	if err != nil {
+		t.Fatal(err)
+	}
 }

@@ -20,7 +20,10 @@ func PublishMessage(kafkaURI, topic string, message string) (string, error) {
 		return m, err
 	}
 
-	conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
+	if err := conn.SetWriteDeadline(time.Now().Add(10 * time.Second)); err != nil {
+		m = "failed to set write deadline"
+		log.Println(m, err)
+	}
 	_, err = conn.WriteMessages(
 		kafka.Message{Value: []byte(message)},
 	)
