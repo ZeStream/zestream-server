@@ -11,14 +11,14 @@ jobs:
     name: lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
-        with:
-          go-version: 1.19 
-      - name: Build
-        run: go build -v
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v3
-        with:
-          version: v1.29
-          
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.19
+    - name: Install golangci-lint
+      run: |
+        GO111MODULE=on go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.30.0
+    - name: Lint code
+      run: golangci-lint run
