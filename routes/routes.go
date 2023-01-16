@@ -24,27 +24,13 @@ func Init() *gin.Engine {
 		}
 	})
 
-	// TODO: write a functin to return session of AWS/GCP/Azure
-	// Create a new session
-	// sess, err := session.NewSession(&aws.Config{
-	// 	Region: aws.String(constants.S3_REGION),
-	// })
-	// if err != nil {
-	// 	return nil
-	// }
-
-	// // Create a new S3 client
-	// s3Client := s3.New(sess)
-
 	v1 := r.Group("/api/v1")
 
 	v1.GET("ping", controllers.Ping)
 
 	v1.POST("process-video", controllers.ProcessVideo)
 
-	// v1.GET("generate-presigned-url", func(c *gin.Context) {
-	// 	controllers.GeneratePresignedURL(c, s3Client)
-	// })
+	v1.GET("presigned-url", controllers.GeneratePresignedURL)
 
 	return r
 }
