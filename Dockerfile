@@ -12,21 +12,25 @@ ENV GO111MODULE=on \
 
 WORKDIR /build
 
-COPY go.mod .
-COPY go.sum .
-RUN go mod download
+#COPY go.mod .
+#COPY go.sum .
+#COPY .env .
+#RUN go mod download
 
-COPY . .
+#COPY . .
 
-RUN go build -o main .
 
-WORKDIR /dist
+#RUN go run main.go
 
-RUN cp /build/main .
-RUN cp /build/.env .
+#RUN go build -o main .
+
+#WORKDIR /dist
+
+#RUN cp /build/main .
+#RUN cp /build/.env .
 
 EXPOSE 3000
 
-RUN chmod 777 /dist/main
-CMD ["/dist/main"]
+#RUN chmod 777 /dist/main
+#CMD ["/dist/main"]
 

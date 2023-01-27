@@ -5,9 +5,14 @@ services:
           ports:
            - "3000:3000"
           build: .
+          image: zestream_server
           depends_on:
-               - rabbit_mq
+             - rabbit_mq
+          volumes:
+             - ./:/build
+          command: ["sh","run_zeserver.sh"]
         rabbit_mq:
           image: rabbitmq:3
+          hostname: rabbit_mq
            
                  
