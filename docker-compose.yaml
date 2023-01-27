@@ -1,0 +1,13 @@
+version: '3.0'
+
+services:
+        zestream_server:
+          ports:
+           - "3000:3000"
+          build: .
+          depends_on:
+               - rabbit_mq
+        rabbit_mq:
+          image: rabbitmq:3
+           
+                 
