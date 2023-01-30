@@ -25,3 +25,24 @@
    |--------------|-------|
    |GCP_PROJECT_ID| project ID|
    |GCP_BUCKET_NAME | bucket name |
+
+## Configuring Azure
+
+1. Create a storage account using [this](https://azure.microsoft.com/en-in/free/)
+2. You will need `account name` , `azure endpoint` and `access key`
+
+   - [Create a container](https://learn.microsoft.com/en-us/azure/storage/blobs/storage-quickstart-blobs-portal#create-a-container)
+   - [Get Access Key](https://learn.microsoft.com/en-us/azure/storage/common/storage-account-keys-manage?tabs=azure-portal)
+   - If your storage account is named mystorageaccount, then the default endpoint for Blob Storage is:
+
+   ```
+       http://mystorageaccount.blob.core.windows.net
+
+   ```
+
+3. Set the values in the `.env` file
+   | Env Variable | Value |  
+    |--------------|-------|
+   |AZURE_ACCESS_KEY| access key|
+   |AZURE_ENDPOINT | azure endpoint |
+   |AZURE_ACCOUNT_NAME | name of the storage account |
