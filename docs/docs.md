@@ -13,3 +13,15 @@
    | AWS_SESSION_TOKEN | session token |
    | AWS_S3_BUCKET_NAME | S3 bucket name |
    | AWS_S3_REGION | S3 region |
+
+## Configuring GCP
+
+1. Set up GCP account using [this](https://cloud.google.com/apigee/docs/hybrid/v1.2/precog-gcpaccount)
+2. You will need `project ID` and `GCP bucket name`
+   - [Get Project ID](https://support.google.com/googleapi/answer/7014113?hl=en)
+   - [Creating GCP Bucket](https://cloud.google.com/storage/docs/creating-buckets)
+3. Set the values in the `.env` file
+   | Env Variable | Value |  
+   |--------------|-------|
+   |GCP_PROJECT_ID| project ID|
+   |GCP_BUCKET_NAME | bucket name |
