@@ -8,10 +8,13 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"time"
 	"zestream-server/configs"
+	"zestream-server/constants"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 
 	"cloud.google.com/go/storage"
@@ -72,6 +75,38 @@ func UploadToCloudStorage(uploader Uploader, path string) {
 	uploader.Upload(walker)
 }
 
+func GetPreSignedURL(videoId string) string {
+	cloudSession := configs.GetCloudSession()
+
+	containerName := constants.CLOUD_CONTAINER_NAME_TEMP
+
+	if configs.EnvVar[configs.GCP_PROJECT_ID] != "" {
+		return getPresignedGCPURL(&GcpUploader{
+			ContainerName: containerName,
+			VideoId:       videoId,
+			Client:        cloudSession.GCPSession,
+		})
+	}
+
+	if configs.EnvVar[configs.AWS_ACCESS_KEY_ID] != "" {
+		return getPresignedAWSURL(AwsUploader{
+			ContainerName: containerName,
+			VideoId:       videoId,
+			Session:       cloudSession.AWSSession,
+		})
+	}
+
+	if configs.EnvVar[configs.AZURE_ACCESS_KEY] != "" {
+		return getPresignedAzureURL(AzureUploader{
+			ContainerName: containerName,
+			VideoId:       videoId,
+			Credential:    cloudSession.AzureSession,
+		})
+	}
+
+	return ""
+}
+
 func (f fileWalk) WalkFunc(path string, info os.FileInfo, err error) error {
 
 	if err != nil {
@@ -127,6 +162,21 @@ func (a AwsUploader) Upload(walker fileWalk) {
 	}
 }
 
+func getPresignedAWSURL(a AwsUploader) string {
+	s3Client := s3.New(a.Session)
+
+	req, _ := s3Client.PutObjectRequest(&s3.PutObjectInput{
+		Bucket: aws.String(configs.EnvVar[configs.AWS_S3_BUCKET_NAME]),
+		Key:    aws.String(filepath.Join(a.ContainerName, a.VideoId)),
+	})
+
+	//  Sign the request and generate a presigned URL
+	urlStr, err := req.Presign(constants.PRESIGNED_URL_EXPIRATION)
+	LogErr(err)
+
+	return urlStr
+}
+
 type GcpUploader struct {
 	ContainerName string
 	VideoId       string
@@ -175,6 +225,25 @@ func (g *GcpUploader) Upload(walker fileWalk) {
 
 }
 
+func getPresignedGCPURL(g *GcpUploader) string {
+	bucketName := configs.EnvVar[configs.GCP_BUCKET_NAME]
+	if bucketName == "" {
+		log.Println("GCP Bucketname not available")
+	}
+
+	now := time.Now()
+	urlExpiryTime := now.Add(constants.PRESIGNED_URL_EXPIRATION)
+
+	u, err := g.Client.Bucket(bucketName).SignedURL(filepath.Join(g.ContainerName, g.VideoId), &storage.SignedURLOptions{
+		Expires: urlExpiryTime,
+	})
+	LogErr(err)
+
+	signedURL, _ := url.Parse(u)
+
+	return signedURL.String()
+}
+
 type AzureUploader struct {
 	ContainerName string
 	VideoId       string
@@ -183,8 +252,6 @@ type AzureUploader struct {
 
 func (a AzureUploader) Upload(walker fileWalk) {
 	azureEndpoint := configs.EnvVar[configs.AZURE_ENDPOINT]
-
-	log.Println(azureEndpoint)
 
 	if azureEndpoint == "" {
 		log.Println("Azure endpoint not available")
@@ -221,5 +288,15 @@ func (a AzureUploader) Upload(walker fileWalk) {
 			log.Println("Unable to close the file ", path)
 		}
 	}
+}
 
+func getPresignedAzureURL(a AzureUploader) string {
+	azureEndpoint := configs.EnvVar[configs.AZURE_ENDPOINT]
+
+	url, _ := url.Parse(azureEndpoint)
+	url = url.JoinPath(a.ContainerName, a.VideoId)
+	blockBlobUrl := azblob.NewBlockBlobURL(*url, azblob.NewPipeline(a.Credential, azblob.PipelineOptions{}))
+
+	urlSigned := blockBlobUrl.URL()
+	return urlSigned.String()
 }
