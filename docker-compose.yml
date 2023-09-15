@@ -1,0 +1,19 @@
+version: '3'
+services:
+  go-app-http:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    environment:
+      - PORT=4444
+    ports:
+      - "8080:4444"
+    container_name: go-app-http-container
+    restart: unless-stopped
+
+  go-app-consumer:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    container_name: go-app-consumer-container
+    restart: unless-stopped
