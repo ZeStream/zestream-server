@@ -13,7 +13,6 @@ func Init() *gin.Engine {
 	r := gin.Default()
 
 	r.Use(func(c *gin.Context) {
-		// add header Access-Control-Allow-Origin
 		c.Writer.Header().Set("Content-Type", "application/json")
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, GET, PUT, DELETE, UPDATE")
@@ -25,27 +24,13 @@ func Init() *gin.Engine {
 		}
 	})
 
-	// TODO: write a functin to return session of AWS/GCP/Azure
-	// Create a new session
-	// sess, err := session.NewSession(&aws.Config{
-	// 	Region: aws.String(constants.S3_REGION),
-	// })
-	// if err != nil {
-	// 	return nil
-	// }
+	apiV1 := r.Group("/api/v1")
 
-	// // Create a new S3 client
-	// s3Client := s3.New(sess)
+	r.GET("health", controllers.Ping)
 
-	v1 := r.Group("/api/v1")
-
-	v1.GET("ping", controllers.Ping)
-
-	v1.POST("process-video", controllers.ProcessVideo)
-
-	// v1.GET("generate-presigned-url", func(c *gin.Context) {
-	// 	controllers.GeneratePresignedURL(c, s3Client)
-	// })
+	// /api/v1
+	apiV1.POST("video/process", controllers.ProcessVideo)
+	apiV1.GET("url/presigned", controllers.GetPresignedURL)
 
 	return r
 }

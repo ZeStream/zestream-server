@@ -8,10 +8,13 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"time"
 	"zestream-server/configs"
+	"zestream-server/constants"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 
 	"cloud.google.com/go/storage"
@@ -222,4 +225,54 @@ func (a AzureUploader) Upload(walker fileWalk) {
 		}
 	}
 
+}
+
+func GetSignedURL(videoId string) string {
+	if configs.EnvVar[configs.AWS_ACCESS_KEY_ID] != "" {
+		return generateAWSSignedURL(videoId)
+	}
+
+	if configs.EnvVar[configs.GCP_BUCKET_NAME] != "" {
+		return generateGCPSignedURL(videoId)
+	}
+
+	return ""
+}
+
+func generateGCPSignedURL(videoId string) string {
+	session := configs.GetCloudSession()
+	bucket := session.GCPSession.Bucket(configs.EnvVar[configs.GCP_BUCKET_NAME])
+
+	expirationTime := time.Now().Add(constants.PRESIGNED_URL_EXPIRATION)
+
+	url, err := bucket.SignedURL(videoId, &storage.SignedURLOptions{
+		Method:  "GET",
+		Expires: expirationTime,
+	})
+	if err != nil {
+		log.Println(err)
+	}
+
+	return url
+}
+
+func generateAWSSignedURL(videoId string) string {
+	session := configs.GetCloudSession()
+
+	client := s3.New(session.AWSSession)
+
+	req, err := client.PutObjectRequest(&s3.PutObjectInput{
+		Bucket: aws.String(configs.EnvVar[configs.AWS_S3_BUCKET_NAME]),
+		Key:    aws.String(videoId),
+	})
+	if err != nil {
+		log.Println(err)
+	}
+
+	url, er := req.Presign(constants.PRESIGNED_URL_EXPIRATION)
+	if er != nil {
+		log.Println(err)
+	}
+
+	return url
 }
