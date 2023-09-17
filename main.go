@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"os"
 	"zestream-server/configs"
@@ -10,18 +11,20 @@ import (
 )
 
 func main() {
+	isConsumer := flag.Bool("consumer", false, "run service as consumer")
+	flag.Parse()
+
 	configs.LoadEnv()
-
-	r := routes.Init()
-
-	port := os.Getenv(constants.PORT)
-
-	// initialize RabbitMQ
+	configs.InitCloud()
 	conn, ch, q, _, cancel := configs.InitRabbitMQ()
 
-	configs.InitCloud()
+	if *isConsumer {
+		service.VideoProcessConsumer(ch, q)
+		return
+	}
 
-	go service.VideoProcessConsumer(ch, q)
+	r := routes.Init()
+	port := os.Getenv(constants.PORT)
 
 	err := r.Run(":" + port)
 	failOnError(err)

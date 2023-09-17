@@ -25,16 +25,19 @@ func InitCloud() {
 	if EnvVar[AWS_ACCESS_KEY_ID] != "" {
 		cloudSession.AWSSession = getAWSSession()
 		log.Println("Initialised AWS")
+		return
 	}
 
 	if EnvVar[AZURE_ACCESS_KEY] != "" {
 		cloudSession.AzureSession = getAzureSession()
 		log.Println("Initialised Azure")
+		return
 	}
 
 	if EnvVar[GCP_PROJECT_ID] != "" {
 		cloudSession.GCPSession = getGCPSession()
 		log.Println("Initialised GCP")
+		return
 	}
 }
 
