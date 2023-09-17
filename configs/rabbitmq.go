@@ -2,6 +2,7 @@ package configs
 
 import (
 	"context"
+	"crypto/tls"
 	"log"
 	"zestream-server/constants"
 
@@ -15,8 +16,12 @@ var rabbitCtx context.Context
 var rabbitCtxCancel context.CancelFunc
 
 func InitRabbitMQ() (*rmq.Connection, *rmq.Channel, *rmq.Queue, *context.Context, context.CancelFunc) {
+	config := &tls.Config{
+		InsecureSkipVerify: true,
+	}
+
 	var err error
-	rabbitConn, err = rmq.Dial(EnvVar[RABBITMQ_URI])
+	rabbitConn, err = rmq.DialTLS(EnvVar[RABBITMQ_URI], config)
 	failOnError(err)
 
 	rabbitCh, err = rabbitConn.Channel()

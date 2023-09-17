@@ -14,6 +14,7 @@ import (
 )
 
 func VideoProcessConsumer(ch *rmq.Channel, q *rmq.Queue) {
+	log.Println("Running ZeStream as Consumer")
 	var forever chan struct{}
 
 	maxProcesses, err := strconv.Atoi(configs.EnvVar[configs.MAX_CONCURRENT_PROCESSING])

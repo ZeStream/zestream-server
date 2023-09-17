@@ -61,7 +61,7 @@ func LoadEnv() {
 	err := dotEnv.Load()
 
 	if err != nil {
-		log.Fatalln(err)
+		log.Println(err)
 	}
 
 	for key, val := range configVars {

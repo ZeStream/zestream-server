@@ -1,19 +1,40 @@
 version: '3'
 services:
-  go-app-http:
+  zestream-http:
     build:
       context: ./
-      dockerfile: Dockerfile
+      dockerfile: http.Dockerfile
     environment:
-      - PORT=4444
+      - PORT=${PORT}
+      - RABBITMQ_URI=${RABBITMQ_URI}
+      - GIN_MODE=${GIN_MODE}
+      - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS}
+      - AZURE_ACCOUNT_NAME=${AZURE_ACCOUNT_NAME}
+      - AZURE_ENDPOINT=${AZURE_ENDPOINT}
+      - AZURE_ACCESS_KEY=${AZURE_ACCESS_KEY}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN}
     ports:
-      - "8080:4444"
+      - "8080:${PORT}"
     container_name: go-app-http-container
-    restart: unless-stopped
 
-  go-app-consumer:
+  zestream-consumer:
     build:
       context: ./
-      dockerfile: Dockerfile
+      dockerfile: consumer.Dockerfile
     container_name: go-app-consumer-container
-    restart: unless-stopped
+    environment:
+      - RABBITMQ_URI=${RABBITMQ_URI}
+      - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS}
+      - AZURE_ACCOUNT_NAME=${AZURE_ACCOUNT_NAME}
+      - AZURE_ENDPOINT=${AZURE_ENDPOINT}
+      - AZURE_ACCESS_KEY=${AZURE_ACCESS_KEY}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN}
+    volumes:
+      - consumer-data:/app
+
+volumes:
+  consumer-data:

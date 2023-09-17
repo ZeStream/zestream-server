@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"log"
 	"zestream-server/controllers"
 
 	"github.com/gin-gonic/gin"
@@ -8,7 +9,7 @@ import (
 
 // Init function will perform all route operations
 func Init() *gin.Engine {
-
+	log.Println("Running ZeStream as HTTP Server")
 	r := gin.Default()
 
 	r.Use(func(c *gin.Context) {
