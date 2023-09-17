@@ -18,7 +18,7 @@ const CLOUD_CONTAINER_NAME = "zestream-dash"
 const DOWNLOAD_FOLDER_PERM = 0666
 
 const AWS_ENDPOINT = "http://localhost:4566"
-const PRESIGNED_URL_EXPIRATION = 60 * time.Minute
+const PRESIGNED_URL_EXPIRATION = 1 * time.Hour
 
 // event queue
 const RABBIT_MQ_CHANNEL = "VideoProcessing"
