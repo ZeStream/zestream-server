@@ -5,7 +5,6 @@ import (
 	"errors"
 	"log"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 	"zestream-server/constants"
@@ -22,7 +21,7 @@ func GetDownloadFilePathName(fileName string) (string, error) {
 		return "", err
 	}
 
-	pathName := path.Join(cwd, constants.DOWNLOAD_FILE_PATH_PREFIX)
+	pathName := filepath.Join(cwd, constants.DOWNLOAD_FILE_PATH_PREFIX)
 
 	err = createDirPath(pathName)
 
@@ -30,7 +29,7 @@ func GetDownloadFilePathName(fileName string) (string, error) {
 		return "", err
 	}
 
-	newPath := path.Join(pathName, fileName)
+	newPath := filepath.Join(pathName, fileName)
 
 	return newPath, nil
 }
@@ -49,7 +48,7 @@ func GetOutputFilePathName(fileName string, postfix string) (string, error) {
 	// TODO: replace filename with id
 	fileName = strings.Replace(fileName, ".", "_", 1)
 
-	pathName := path.Join(cwd, constants.OUTPUT_FILE_PATH_PREFIX, fileName)
+	pathName := filepath.Join(cwd, constants.OUTPUT_FILE_PATH_PREFIX, fileName)
 
 	err = createDirPath(pathName)
 
@@ -57,7 +56,7 @@ func GetOutputFilePathName(fileName string, postfix string) (string, error) {
 		return "", err
 	}
 
-	newPath := path.Join(pathName, postfix)
+	newPath := filepath.Join(pathName, postfix)
 
 	return newPath, nil
 }
