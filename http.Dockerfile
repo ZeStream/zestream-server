@@ -19,5 +19,6 @@ FROM ubuntu:latest AS zestream-http
 WORKDIR /app
 
 COPY --from=builder /app/main ./
+COPY --from=builder /app/credentials.json ./
 
 CMD ["./main"]
