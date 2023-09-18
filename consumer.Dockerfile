@@ -22,5 +22,6 @@ COPY --from=builder /app/credentials.json ./
 
 RUN apt update 
 RUN apt install -y ffmpeg
+RUN apt install -y gpac
 
 CMD ["./main", "--consumer"]
