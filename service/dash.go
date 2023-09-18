@@ -31,11 +31,11 @@ func generateDash(fileName string, watermark types.WaterMark) {
 
 	wg.Add(len(constants.AudioFileTypeMap) + len(constants.VideoFileTypeMap) + 1)
 
-	generateAudioFiles(targetFile, outputPath, &wg)
+	go generateAudioFiles(targetFile, outputPath, &wg)
 
-	generateVideoFiles(targetFile, outputPath, watermark, &wg)
+	go generateVideoFiles(targetFile, outputPath, watermark, &wg)
 
-	generateThumbnailFiles(targetFile, outputPath, &wg)
+	go generateThumbnailFiles(targetFile, outputPath, &wg)
 
 	wg.Wait()
 
@@ -92,9 +92,9 @@ func generateMultiBitrateVideo(targetFile string, outputFile string, fileType co
 
 	err := getInput(targetFile, watermark).
 		Output(outputFile, ffmpeg.KwArgs{
-			constants.VideoKwargs[constants.Preset]:         constants.FFmpegConfig[constants.Preset],
-			constants.VideoKwargs[constants.Tune]:           constants.FFmpegConfig[constants.Tune],
-			constants.VideoKwargs[constants.FpsMode]:        constants.FFmpegConfig[constants.FpsMode],
+			constants.VideoKwargs[constants.Preset]: constants.FFmpegConfig[constants.Preset],
+			constants.VideoKwargs[constants.Tune]:   constants.FFmpegConfig[constants.Tune],
+			// constants.VideoKwargs[constants.FpsMode]:        constants.FFmpegConfig[constants.FpsMode],
 			constants.VideoKwargs[constants.AudioExclusion]: constants.FFmpegConfig[constants.AudioExclusion],
 			constants.VideoKwargs[constants.VideoCodec]:     constants.FFmpegConfig[constants.VideoCodec],
 			constants.VideoKwargs[constants.MaxRate]:        constants.VideoBitrateMap[fileType],
