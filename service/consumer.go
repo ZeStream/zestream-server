@@ -51,14 +51,13 @@ func VideoProcessConsumer(ch *rmq.Channel, q *rmq.Queue) {
 
 			var video types.Video
 
-			log.Println("Request Consumed: ", video)
-
 			err := json.Unmarshal(d.Body, &video)
 			if err != nil {
 				log.Println(err)
 				continue
 			}
 
+			log.Println("Request Consumed: ", video)
 			go processVideo(&video, guard)
 		}
 	}()
@@ -90,10 +89,10 @@ func processVideo(video *types.Video, guard <-chan int) {
 	outputDir, err := utils.GetOutputFilePathName(videoFileName, "")
 	utils.LogErr(err)
 
-	err = os.RemoveAll(outputDir)
-	utils.LogErr(err)
-
 	utils.UploadToCloudStorage(uploader, outputDir)
+
+	utils.LogErr(err)
+	err = os.RemoveAll(outputDir)
 
 	<-guard
 }

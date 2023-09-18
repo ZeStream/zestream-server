@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/url"
 	"os"
+	"path"
 	"path/filepath"
 	"time"
 	"zestream-server/configs"
@@ -103,26 +104,26 @@ func (a AwsUploader) Upload(walker fileWalk) {
 
 	uploader := s3manager.NewUploader(a.Session)
 
-	for path := range walker {
-		filename := filepath.Base(path)
+	for pathName := range walker {
+		filename := filepath.Base(pathName)
 
-		file, err := os.Open(path)
+		file, err := os.Open(pathName)
 		if err != nil {
-			log.Println("Failed opening file", path, err)
+			log.Println("Failed opening file", pathName, err)
 			continue
 		}
 
 		result, err := uploader.Upload(&s3manager.UploadInput{
 			Bucket: &bucket,
-			Key:    aws.String(filepath.Join(a.ContainerName, a.VideoId, filename)),
+			Key:    aws.String(path.Join(a.ContainerName, a.VideoId, filename)),
 			Body:   file,
 		})
 
 		if err != nil {
 			file.Close()
-			log.Println("Failed to upload", path, err)
+			log.Println("Failed to upload", pathName, err)
 		}
-		log.Println("Uploaded", path, result.Location)
+		log.Println("Uploaded", pathName, result.Location)
 
 		if err := file.Close(); err != nil {
 			log.Println("Unable to close the file")
@@ -146,21 +147,21 @@ func (g *GcpUploader) Upload(walker fileWalk) {
 
 	bucket := g.Client.Bucket(bucketName)
 
-	for path := range walker {
-		filename := filepath.Base(path)
+	for pathName := range walker {
+		filename := filepath.Base(pathName)
 		fmt.Printf("Creating file /%v/%v\n", bucketName, filename)
 
-		wc := bucket.Object(filepath.Join(g.ContainerName, g.VideoId, filename)).NewWriter(ctx)
+		wc := bucket.Object(path.Join(g.ContainerName, g.VideoId, filename)).NewWriter(ctx)
 
-		blob, err := os.Open(path)
+		blob, err := os.Open(pathName)
 		if err != nil {
-			log.Println("Failed opening file", path, err)
+			log.Println("Failed opening file", pathName, err)
 		}
 
 		if _, err := io.Copy(wc, blob); err != nil {
 			//close the blob before error log
 			blob.Close()
-			log.Println("Failed to upload", path, err)
+			log.Println("Failed to upload", pathName, err)
 		}
 
 		if err := wc.Close(); err != nil {
@@ -168,7 +169,7 @@ func (g *GcpUploader) Upload(walker fileWalk) {
 			blob.Close()
 			log.Println("unable to close the bucket", err)
 		} else {
-			log.Println("successfully uploaded ", path)
+			log.Println("successfully uploaded ", pathName)
 		}
 
 		if err := blob.Close(); err != nil {
