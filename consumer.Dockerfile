@@ -20,7 +20,9 @@ WORKDIR /app
 COPY --from=builder /app/main ./
 COPY --from=builder /app/credentials.json ./
 
-RUN apt update 
+RUN apt update
+RUN apt install -y ca-certificates
+RUN update-ca-certificates
 RUN apt install -y ffmpeg
 RUN apt install -y gpac
 

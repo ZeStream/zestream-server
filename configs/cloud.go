@@ -39,6 +39,8 @@ func InitCloud() {
 		log.Println("Initialised GCP")
 		return
 	}
+
+	log.Fatalln("Cloud Initialization Failed")
 }
 
 func GetCloudSession() *CloudSession {
