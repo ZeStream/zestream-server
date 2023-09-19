@@ -57,7 +57,6 @@ func VideoProcessConsumer(ch *rmq.Channel, q *rmq.Queue) {
 				continue
 			}
 
-			log.Println("Request Consumed: ", video)
 			go processVideo(&video, guard)
 		}
 	}()
