@@ -1,16 +1,24 @@
-# ZeStream - An adaptive video streaming server
+# ZeStream Server
 
-## What is adaptive video streaming?
+A media streaming service, which can stream on demand video, image (with tansformations) and audio and works as CDN.
 
-Ever wonder how Youtube/Netflix/Tiktok changes the resolution of the video, you are watching depending on your network speed?
+## Getting Started
 
-You want to implement the similar feature in your own product, without any hassle?
+#### Deploying on Docker Container
 
-> **ZeStream is the backend service which you can self-deploy, and use its API to process the video and store it on a storage bucket like AWS S3/Google Cloud/Azure....**
+```bash
+# create .env file from .env-template
 
-## Architecture
+docker compose up
+```
 
-<img src="./docs/static/ZeStream.svg" width="500" />
+## Dev Setup
+
+1. Install Golang v1.19 from [Go.dev](https://go.dev/doc/install)
+2. Fork this repo, and clone the forked repo
+3. `cd zestream-server`
+4. `go get .`
+5. `go run main.go`
 
 ## Implementation
 
@@ -22,14 +30,6 @@ You want to implement the similar feature in your own product, without any hassl
 6. Output is stored in local disk
 7. After FFmpeg finishes processing, another worker pushes the files to cloud storage
 8. CDN is connected to storage for fetching the files.
-
-## Dev Setup
-
-1. Install Golang v1.19 from [Go.dev](https://go.dev/doc/install)
-2. Fork this repo, and clone the forked repo
-3. `cd zestream-server`
-4. `go get .`
-5. `go run main.go`
 
 ## How to contribute?
 
