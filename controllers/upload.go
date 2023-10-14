@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"log"
 	"net/http"
 	"path/filepath"
 	"zestream-server/utils"
@@ -18,6 +19,8 @@ func GetPresignedURL(c *gin.Context) {
 	}
 
 	videoID := utils.VideoIDGen(extension)
+
+	log.Println(videoID, "id")
 
 	url := utils.GetSignedURL(videoID)
 	if url == "" {

@@ -38,7 +38,7 @@ func GetUploader(containerName string, videoId string) Uploader {
 		return AwsUploader{
 			ContainerName: containerName,
 			VideoId:       videoId,
-			Session:       cloudSession.AWSSession,
+			Session:       cloudSession.AWS,
 		}
 	}
 
@@ -46,7 +46,7 @@ func GetUploader(containerName string, videoId string) Uploader {
 		return &GcpUploader{
 			ContainerName: containerName,
 			VideoId:       videoId,
-			Client:        cloudSession.GCPSession,
+			Client:        cloudSession.GCP,
 		}
 	}
 
@@ -54,7 +54,7 @@ func GetUploader(containerName string, videoId string) Uploader {
 		return AzureUploader{
 			ContainerName: containerName,
 			VideoId:       videoId,
-			Credential:    cloudSession.AzureSession,
+			Credential:    cloudSession.Azure,
 		}
 	}
 
@@ -241,8 +241,8 @@ func GetSignedURL(videoId string) string {
 }
 
 func generateGCPSignedURL(videoId string) string {
-	session := configs.GetCloudSession()
-	bucket := session.GCPSession.Bucket(configs.EnvVar[configs.GCP_BUCKET_NAME])
+	client := configs.GetGCPClient(true)
+	bucket := client.Bucket(configs.EnvVar[configs.GCP_BUCKET_NAME])
 
 	expirationTime := time.Now().Add(constants.PRESIGNED_URL_EXPIRATION)
 
@@ -260,7 +260,7 @@ func generateGCPSignedURL(videoId string) string {
 func generateAWSSignedURL(videoId string) string {
 	session := configs.GetCloudSession()
 
-	client := s3.New(session.AWSSession)
+	client := s3.New(session.AWS)
 
 	req, err := client.PutObjectRequest(&s3.PutObjectInput{
 		Bucket: aws.String(configs.EnvVar[configs.AWS_S3_BUCKET_NAME]),
