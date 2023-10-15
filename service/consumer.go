@@ -90,8 +90,8 @@ func processVideo(video *types.Video, guard <-chan int) {
 
 	utils.UploadToCloudStorage(uploader, outputDir)
 
-	utils.LogErr(err)
 	err = os.RemoveAll(outputDir)
+	utils.LogErr(err)
 
 	<-guard
 }

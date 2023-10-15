@@ -2,6 +2,7 @@ package configs
 
 import (
 	"context"
+	"encoding/base64"
 	"log"
 
 	"cloud.google.com/go/storage"
@@ -9,12 +10,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"google.golang.org/api/option"
 )
 
 type CloudSession struct {
-	AWSSession   *session.Session
-	GCPSession   *storage.Client
-	AzureSession *azblob.SharedKeyCredential
+	AWS   *session.Session
+	GCP   *storage.Client
+	Azure *azblob.SharedKeyCredential
 }
 
 var cloudSession *CloudSession
@@ -23,19 +25,19 @@ func InitCloud() {
 	cloudSession = new(CloudSession)
 
 	if EnvVar[AWS_ACCESS_KEY_ID] != "" {
-		cloudSession.AWSSession = getAWSSession()
+		cloudSession.AWS = getAWSSession()
 		log.Println("Initialised AWS")
 		return
 	}
 
 	if EnvVar[AZURE_ACCESS_KEY] != "" {
-		cloudSession.AzureSession = getAzureSession()
+		cloudSession.Azure = getAzureCreds()
 		log.Println("Initialised Azure")
 		return
 	}
 
 	if EnvVar[GCP_PROJECT_ID] != "" {
-		cloudSession.GCPSession = getGCPSession()
+		cloudSession.GCP = GetGCPClient(false)
 		log.Println("Initialised GCP")
 		return
 	}
@@ -65,7 +67,7 @@ func getAWSSession() *session.Session {
 	return s
 }
 
-func getAzureSession() *azblob.SharedKeyCredential {
+func getAzureCreds() *azblob.SharedKeyCredential {
 	s, err := azblob.NewSharedKeyCredential(
 		EnvVar[AZURE_ACCOUNT_NAME],
 		EnvVar[AZURE_ACCESS_KEY],
@@ -78,9 +80,21 @@ func getAzureSession() *azblob.SharedKeyCredential {
 	return s
 }
 
-func getGCPSession() *storage.Client {
-	client, err := storage.NewClient(context.Background())
+func GetGCPClient(isServiceUser bool) *storage.Client {
+	var credsInBase64 string
 
+	if isServiceUser {
+		credsInBase64 = EnvVar[GCP_SERVICE_USER_CREDS_JSON_BASE64]
+	} else {
+		credsInBase64 = EnvVar[GCP_CREDS_JSON_BASE64]
+	}
+
+	credsDecoded, err := base64.RawURLEncoding.DecodeString(credsInBase64)
+	if err != nil {
+		log.Println(err)
+	}
+
+	client, err := storage.NewClient(context.Background(), option.WithCredentialsJSON(credsDecoded))
 	if err != nil {
 		log.Println(err)
 	}
