@@ -352,7 +352,7 @@ func generateAzureSignedURL(filePath string) string {
 	return sasURL
 }
 
-func GetCloudStoragePath(basePath, fileName string, fileType string) (string, error) {
+func GetCloudStoragePath(basePath, fileName string, _ string) (string, error) {
 	url, err := url.JoinPath(basePath, fileName)
 	LogErr(err)
 
