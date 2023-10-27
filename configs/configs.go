@@ -25,6 +25,7 @@ const (
 	GCP_CREDS_JSON_BASE64
 	GCP_SERVICE_USER_CREDS_JSON_BASE64
 	MAX_CONCURRENT_PROCESSING
+	CDN_BASE_URL
 )
 
 var configVars = map[CONFIG_KEY]string{
@@ -43,6 +44,7 @@ var configVars = map[CONFIG_KEY]string{
 	AWS_SECRET_ACCESS_KEY:              "AWS_SECRET_ACCESS_KEY",
 	AWS_SESSION_TOKEN:                  "AWS_SESSION_TOKEN",
 	MAX_CONCURRENT_PROCESSING:          "MAX_CONCURRENT_PROCESSING",
+	CDN_BASE_URL:                       "CDN_BASE_URL",
 }
 
 var EnvVar = map[CONFIG_KEY]string{
@@ -61,6 +63,7 @@ var EnvVar = map[CONFIG_KEY]string{
 	AWS_SECRET_ACCESS_KEY:              "",
 	AWS_SESSION_TOKEN:                  "",
 	MAX_CONCURRENT_PROCESSING:          "1",
+	CDN_BASE_URL:                       "",
 }
 
 func LoadEnv() {

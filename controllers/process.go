@@ -10,7 +10,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func ProcessVideo(c *gin.Context) {
+type Process struct{}
+
+func (*Process) Video(c *gin.Context) {
 	var request types.Video
 
 	if err := c.ShouldBindJSON(&request); err != nil {

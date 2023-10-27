@@ -55,7 +55,7 @@ func getAWSSession() *session.Session {
 		Credentials: credentials.NewStaticCredentials(
 			EnvVar[AWS_ACCESS_KEY_ID],
 			EnvVar[AWS_SECRET_ACCESS_KEY],
-			EnvVar[AWS_SESSION_TOKEN],
+			"",
 		),
 		CredentialsChainVerboseErrors: aws.Bool(true),
 	})

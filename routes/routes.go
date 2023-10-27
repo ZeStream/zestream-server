@@ -28,8 +28,10 @@ func Init() *gin.Engine {
 
 	r.GET("health", controllers.Ping)
 
+	process := new(controllers.Process)
+
 	// /api/v1
-	apiV1.POST("video/process", controllers.ProcessVideo)
+	apiV1.POST("video/process", process.Video)
 	apiV1.GET("url/presigned", controllers.GetPresignedURL)
 
 	return r
