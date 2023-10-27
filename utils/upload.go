@@ -33,8 +33,9 @@ type Uploader interface {
 func GetUploader(containerName string, videoId string) Uploader {
 
 	cloudSession := configs.GetCloudSession()
+	isAWS, isGCP, isAzure := GetWhichCloudIsEnabled()
 
-	if configs.EnvVar[configs.AWS_ACCESS_KEY_ID] != "" {
+	if isAWS {
 		return AwsUploader{
 			ContainerName: containerName,
 			VideoId:       videoId,
@@ -42,7 +43,7 @@ func GetUploader(containerName string, videoId string) Uploader {
 		}
 	}
 
-	if configs.EnvVar[configs.GCP_PROJECT_ID] != "" {
+	if isGCP {
 		return &GcpUploader{
 			ContainerName: containerName,
 			VideoId:       videoId,
@@ -50,7 +51,7 @@ func GetUploader(containerName string, videoId string) Uploader {
 		}
 	}
 
-	if configs.EnvVar[configs.AZURE_ACCESS_KEY] != "" {
+	if isAzure {
 		return AzureUploader{
 			ContainerName: containerName,
 			VideoId:       videoId,
@@ -228,25 +229,50 @@ func (a AzureUploader) Upload(walker fileWalk) {
 
 }
 
-func GetSignedURL(videoId string) string {
+func GetWhichCloudIsEnabled() (bool, bool, bool) {
 	if configs.EnvVar[configs.AWS_ACCESS_KEY_ID] != "" {
-		return generateAWSSignedURL(videoId)
+		return true, false, false
 	}
 
 	if configs.EnvVar[configs.GCP_BUCKET_NAME] != "" {
-		return generateGCPSignedURL(videoId)
+		return false, true, false
+	}
+
+	if configs.EnvVar[configs.AZURE_ACCOUNT_NAME] != "" {
+		return false, false, true
+	}
+
+	return false, false, false
+}
+
+func GetSignedURL(videoId string, fileType string, basePath string) string {
+	isAWS, isGCP, isAzure := GetWhichCloudIsEnabled()
+
+	filePath, err := GetCloudStoragePath(basePath, videoId, fileType)
+	LogErr(err)
+
+	if isAWS {
+		return generateAWSSignedURL(filePath)
+	}
+
+	if isGCP {
+		return generateGCPSignedURL(filePath)
+	}
+
+	if isAzure {
+		return generateAzureSignedURL(filePath)
 	}
 
 	return ""
 }
 
-func generateGCPSignedURL(videoId string) string {
+func generateGCPSignedURL(filePath string) string {
 	client := configs.GetGCPClient(true)
 	bucket := client.Bucket(configs.EnvVar[configs.GCP_BUCKET_NAME])
 
 	expirationTime := time.Now().Add(constants.PRESIGNED_URL_EXPIRATION)
 
-	url, err := bucket.SignedURL(videoId, &storage.SignedURLOptions{
+	url, err := bucket.SignedURL(filePath, &storage.SignedURLOptions{
 		Method:  "GET",
 		Expires: expirationTime,
 	})
@@ -257,15 +283,16 @@ func generateGCPSignedURL(videoId string) string {
 	return url
 }
 
-func generateAWSSignedURL(videoId string) string {
+func generateAWSSignedURL(filePath string) string {
 	session := configs.GetCloudSession()
 
 	client := s3.New(session.AWS)
 
 	req, err := client.PutObjectRequest(&s3.PutObjectInput{
 		Bucket: aws.String(configs.EnvVar[configs.AWS_S3_BUCKET_NAME]),
-		Key:    aws.String(videoId),
+		Key:    aws.String(filePath),
 	})
+
 	if err != nil {
 		log.Println(err)
 	}
@@ -276,4 +303,58 @@ func generateAWSSignedURL(videoId string) string {
 	}
 
 	return url
+}
+
+func generateBlobSAS(blobURL azblob.BlobURL, permissions string) (string, error) {
+	session := configs.GetCloudSession()
+	client := session.Azure
+
+	sasQueryParams, err := azblob.BlobSASSignatureValues{
+		Protocol:    azblob.SASProtocolHTTPS,
+		ExpiryTime:  time.Now().Add(constants.PRESIGNED_URL_EXPIRATION),
+		Permissions: permissions,
+		Version:     time.Now().Format(time.DateOnly),
+	}.NewSASQueryParameters(client)
+
+	if err != nil {
+		return "", err
+	}
+
+	sasURL := blobURL.URL()
+	sasURL.RawQuery = sasQueryParams.Encode()
+	log.Println(sasQueryParams.Encode())
+	return sasURL.String(), nil
+}
+
+func generateAzureSignedURL(filePath string) string {
+	accountName := configs.EnvVar[configs.AZURE_ACCOUNT_NAME]
+	accountKey := configs.EnvVar[configs.AZURE_ACCESS_KEY]
+	containerName := constants.CloudContainerNames[constants.Images]
+
+	credential, err := azblob.NewSharedKeyCredential(accountName, accountKey)
+	if err != nil {
+		fmt.Println("Failed to create shared key credential:", err)
+		return ""
+	}
+
+	pipeline := azblob.NewPipeline(credential, azblob.PipelineOptions{})
+	URL, _ := url.Parse(fmt.Sprintf("https://%s.blob.core.windows.net/%s", accountName, containerName))
+	blobURL := azblob.NewContainerURL(*URL, pipeline).NewBlobURL(filePath)
+
+	permissions := "rw"
+
+	sasURL, err := generateBlobSAS(blobURL, permissions)
+	if err != nil {
+		fmt.Println("Failed to generate pre-signed URL:", err)
+		return ""
+	}
+
+	return sasURL
+}
+
+func GetCloudStoragePath(basePath, fileName string, fileType string) (string, error) {
+	url, err := url.JoinPath(basePath, fileName)
+	LogErr(err)
+
+	return url, err
 }

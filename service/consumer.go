@@ -83,7 +83,7 @@ func processVideo(video *types.Video, guard <-chan int) {
 
 	generateDash(videoFileName, video.Watermark)
 
-	uploader := utils.GetUploader(constants.CLOUD_CONTAINER_NAME, video.ID)
+	uploader := utils.GetUploader(constants.CloudContainerNames[constants.Dashes], video.ID)
 
 	outputDir, err := utils.GetOutputFilePathName(videoFileName, "")
 	utils.LogErr(err)

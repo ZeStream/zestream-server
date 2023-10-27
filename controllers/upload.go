@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"log"
 	"net/http"
 	"path/filepath"
 	"zestream-server/utils"
@@ -11,18 +10,18 @@ import (
 
 func GetPresignedURL(c *gin.Context) {
 	fileName := c.Query("fileName")
+	fileType := c.Query("fileType")
+	basePath := c.Query("basePath")
 	extension := filepath.Ext(fileName)
 
-	if fileName == "" || extension == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing required query parameter 'fileName' or 'fileName' provided without any extension"})
+	if fileName == "" || extension == "" || fileType == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing required query parameter 'fileName' or 'fileType'"})
 		return
 	}
 
 	videoID := utils.VideoIDGen(extension)
 
-	log.Println(videoID, "id")
-
-	url := utils.GetSignedURL(videoID)
+	url := utils.GetSignedURL(videoID, fileType, basePath)
 	if url == "" {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error generating presigned URL", "details": ""})
 		return
