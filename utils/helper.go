@@ -2,9 +2,10 @@ package utils
 
 import (
 	"bytes"
+	"crypto/rand"
 	"encoding/binary"
 	"log"
-	"math/rand"
+	mathRand "math/rand"
 	"strconv"
 )
 
@@ -19,7 +20,7 @@ func VideoIDGen(fileExtension string) string {
 	}
 
 	seed := int64(binary.LittleEndian.Uint64(b[:]))
-	r := rand.New(rand.NewSource(seed))
+	r := mathRand.New(mathRand.NewSource(seed))
 
 	// Generate a 8 digit random number
 	randomNumber := r.Intn(99999999-10000000) + 10000000
