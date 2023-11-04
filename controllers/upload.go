@@ -10,22 +10,21 @@ import (
 
 func GetPresignedURL(c *gin.Context) {
 	fileName := c.Query("fileName")
-	fileType := c.Query("fileType")
 	basePath := c.Query("basePath")
 	extension := filepath.Ext(fileName)
 
-	if fileName == "" || extension == "" || fileType == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing required query parameter 'fileName' or 'fileType'"})
+	if fileName == "" || extension == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing required query parameter 'fileName' or 'fileName' without extension"})
 		return
 	}
 
-	videoID := utils.VideoIDGen(extension)
+	fileID := utils.FileIDGen(extension)
 
-	url := utils.GetSignedURL(videoID, fileType, basePath)
+	url := utils.GetSignedURL(fileID, basePath)
 	if url == "" {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error generating presigned URL", "details": ""})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"preSignedURL": url, "videoID": videoID})
+	c.JSON(http.StatusOK, gin.H{"preSignedURL": url, "fileID": fileID})
 }

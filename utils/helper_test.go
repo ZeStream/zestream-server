@@ -7,10 +7,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestVideoIDGen(t *testing.T) {
+func TestFileIDGen(t *testing.T) {
 
 	// Call the Video ID Gen function
-	videoIDExt := VideoIDGen(".mp4")
+	videoIDExt := FileIDGen(".mp4")
 
 	//Split the string into digits and ext
 	videoID := strings.Split(videoIDExt, ".")

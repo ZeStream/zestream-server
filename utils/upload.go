@@ -245,10 +245,10 @@ func GetWhichCloudIsEnabled() (bool, bool, bool) {
 	return false, false, false
 }
 
-func GetSignedURL(videoId string, fileType string, basePath string) string {
+func GetSignedURL(fileID string, basePath string) string {
 	isAWS, isGCP, isAzure := GetWhichCloudIsEnabled()
 
-	filePath, err := GetCloudStoragePath(basePath, videoId, fileType)
+	filePath, err := GetCloudStoragePath(basePath, fileID)
 	LogErr(err)
 
 	if isAWS {
@@ -352,7 +352,7 @@ func generateAzureSignedURL(filePath string) string {
 	return sasURL
 }
 
-func GetCloudStoragePath(basePath, fileName string, _ string) (string, error) {
+func GetCloudStoragePath(basePath, fileName string) (string, error) {
 	url, err := url.JoinPath(basePath, fileName)
 	LogErr(err)
 

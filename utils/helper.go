@@ -13,7 +13,7 @@ import (
 VideoIDGen returns an unique videoID and appends the fileExtension to it,
 it takes the fileExtensionas parameter
 */
-func VideoIDGen(fileExtension string) string {
+func FileIDGen(fileExtension string) string {
 	var b [8]byte
 	if _, err := rand.Read(b[:]); err != nil {
 		return err.Error()
