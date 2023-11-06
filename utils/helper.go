@@ -3,10 +3,8 @@ package utils
 import (
 	"bytes"
 	"crypto/rand"
-	"encoding/binary"
+	"encoding/base64"
 	"log"
-	mathRand "math/rand"
-	"strconv"
 )
 
 /*
@@ -14,19 +12,17 @@ VideoIDGen returns an unique videoID and appends the fileExtension to it,
 it takes the fileExtensionas parameter
 */
 func VideoIDGen(fileExtension string) string {
-	var b [8]byte
-	if _, err := rand.Read(b[:]); err != nil {
-		return err.Error()
+	length := 8
+	randomBytes := make([]byte, length)
+
+	_, err := rand.Read(randomBytes)
+	if err != nil {
+		return ""
 	}
 
-	seed := int64(binary.LittleEndian.Uint64(b[:]))
-	r := mathRand.New(mathRand.NewSource(seed))
+	uid := base64.URLEncoding.EncodeToString(randomBytes)[:length]
 
-	// Generate a 8 digit random number
-	randomNumber := r.Intn(99999999-10000000) + 10000000
-
-	// VideoID = (8-digit random number) + (file Name)
-	return strconv.Itoa(randomNumber) + fileExtension
+	return uid + fileExtension
 }
 
 // WrapStringInQuotes returns the string wrapped in quotes
