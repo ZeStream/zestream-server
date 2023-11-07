@@ -8,10 +8,10 @@ import (
 )
 
 /*
-VideoIDGen returns an unique videoID and appends the fileExtension to it,
+FileIDGen returns an unique videoID and appends the fileExtension to it,
 it takes the fileExtensionas parameter
 */
-func VideoIDGen(fileExtension string) string {
+func FileIDGen(fileExtension string) string {
 	length := 8
 	randomBytes := make([]byte, length)
 
