@@ -1,10 +1,18 @@
 package types
 
+type Media struct {
+	ID   string `json:"id" binding:"required"`
+	Src  string `json:"src" binding:"required,url"`
+	Type string `json:"type" binding:"required"`
+}
+
 type Video struct {
-	ID        string    `json:"id" binding:"required"`
-	Src       string    `json:"src" binding:"required,url"`
-	Type      string    `json:"type" binding:"required"`
+	Media
 	Watermark WaterMark `json:"watermark"`
+}
+
+type Audio struct {
+	Media
 }
 
 type WaterMark struct {

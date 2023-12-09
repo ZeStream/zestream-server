@@ -13,7 +13,7 @@ import (
 	ffmpeg "github.com/u2takey/ffmpeg-go"
 )
 
-func generateDash(fileName string, watermark types.WaterMark) {
+func generateVideoDash(fileName string, watermark types.WaterMark) {
 	targetFile, err := utils.GetDownloadFilePathName(fileName)
 	if err != nil {
 		log.Println(err)
@@ -40,6 +40,32 @@ func generateDash(fileName string, watermark types.WaterMark) {
 	wg.Wait()
 
 	generateMPD(outputPath)
+
+	deleteVideoFiles(outputPath)
+	utils.DeleteFile(targetFile)
+}
+
+func generateAudioDash(fileName string) {
+	targetFile, err := utils.GetDownloadFilePathName(fileName)
+	if err != nil {
+		log.Println(err)
+	}
+
+	var fileNameStripped = utils.RemoveExtensionFromFile(fileName)
+
+	outputPath, err := utils.GetOutputFilePathName(fileName, fileNameStripped)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	var wg sync.WaitGroup
+
+	wg.Add(len(constants.AudioFileTypeMap))
+
+	go generateAudioFiles(targetFile, outputPath, &wg)
+
+	wg.Wait()
 
 	deleteVideoFiles(outputPath)
 	utils.DeleteFile(targetFile)
