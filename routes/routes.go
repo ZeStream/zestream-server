@@ -10,7 +10,6 @@ import (
 // Init function will perform all route operations
 func Init() *gin.Engine {
 	log.Println("Running ZeStream as HTTP Server")
-	log.Println("Running ZeStream as HTTP Server")
 	r := gin.Default()
 
 	r.Use(func(c *gin.Context) {
@@ -34,6 +33,9 @@ func Init() *gin.Engine {
 	// /api/v1
 	apiV1.POST("video/process", process.Video)
 	apiV1.GET("url/presigned", controllers.GetPresignedURL)
+
+	// audio
+	apiV1.POST("audio/process", process.AudioController)
 
 	return r
 }

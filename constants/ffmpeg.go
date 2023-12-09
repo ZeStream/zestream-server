@@ -4,6 +4,9 @@ type FILE_TYPE int
 
 const (
 	Audio192K FILE_TYPE = iota
+	Audio128K FILE_TYPE = iota
+	Audio256K FILE_TYPE = iota
+	Audio320K FILE_TYPE = iota
 	ImagePng
 	Video5M
 	Video3M
@@ -51,7 +54,10 @@ const Overlay = "overlay"
 const Scale = "scale"
 
 var AudioFileTypeMap = map[FILE_TYPE]string{
+	Audio128K: "_audio128k.m4a",
 	Audio192K: "_audio192k.m4a",
+	Audio256K: "_audio256k.m4a",
+	Audio320K: "_audio320k.m4a",
 }
 
 var ImageFileTypeMap = map[FILE_TYPE]string{

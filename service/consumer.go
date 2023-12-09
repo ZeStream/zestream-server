@@ -49,15 +49,17 @@ func VideoProcessConsumer(ch *rmq.Channel, q *rmq.Queue) {
 		for d := range msgs {
 			guard <- 1
 
-			var video types.Video
+			// var video types.Video
+			var audio types.Audio
 
-			err := json.Unmarshal(d.Body, &video)
+			err := json.Unmarshal(d.Body, &audio)
 			if err != nil {
 				log.Println(err)
 				continue
 			}
 
-			go processVideo(&video, guard)
+			// go processVideo(&video, guard)
+			go ProcessAudio(&audio, guard)
 		}
 	}()
 
@@ -86,6 +88,32 @@ func processVideo(video *types.Video, guard <-chan int) {
 	uploader := utils.GetUploader(constants.CloudContainerNames[constants.Dashes], video.ID)
 
 	outputDir, err := utils.GetOutputFilePathName(videoFileName, "")
+	utils.LogErr(err)
+
+	utils.UploadToCloudStorage(uploader, outputDir)
+
+	err = os.RemoveAll(outputDir)
+	utils.LogErr(err)
+
+	<-guard
+}
+
+func ProcessAudio(audio *types.Audio, guard <-chan int) {
+	log.Println("Processing Audio: ", audio)
+
+	var audioName = audio.ID + "." + audio.Type
+
+	err := utils.Fetch(audio.Src, audioName)
+	if err != nil {
+		utils.LogErr(err)
+		return
+	}
+
+	generateAudioDash(audioName)
+
+	uploader := utils.GetUploader(constants.CloudContainerNames[constants.Dashes], audio.ID)
+
+	outputDir, err := utils.GetOutputFilePathName(audioName, "")
 	utils.LogErr(err)
 
 	utils.UploadToCloudStorage(uploader, outputDir)

@@ -45,10 +45,39 @@ func generateDash(fileName string, watermark types.WaterMark) {
 	utils.DeleteFile(targetFile)
 }
 
+func generateAudioDash(fileName string) {
+	targetFile, err := utils.GetDownloadFilePathName(fileName)
+	if err != nil {
+		log.Println(err)
+	}
+
+	var fileNameStripped = utils.RemoveExtensionFromFile(fileName)
+
+	outputPath, err := utils.GetOutputFilePathName(fileName, fileNameStripped)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	var wg sync.WaitGroup
+
+	wg.Add(len(constants.AudioFileTypeMap) + len(constants.VideoFileTypeMap) + 1)
+
+	go generateAudioFiles(targetFile, outputPath, &wg)
+
+	wg.Wait()
+
+	generateMPD(outputPath)
+
+	deleteVideoFiles(outputPath)
+	utils.DeleteFile(targetFile)
+}
+
 func generateAudioFiles(targetFile string, outputPath string, wg *sync.WaitGroup) {
 	for fileType, filePrefix := range constants.AudioFileTypeMap {
 		var outputFile = outputPath + filePrefix
-
+		log.Println("targetFile: ", targetFile)
+		log.Println("fileType: ", fileType)
 		go generateMultiBitrateAudio(targetFile, outputFile, fileType, wg)
 	}
 }
