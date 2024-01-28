@@ -24,15 +24,18 @@ func Init() *gin.Engine {
 		}
 	})
 
+	process := new(controllers.Process)
+	image := new(controllers.Image)
+
 	apiV1 := r.Group("/api/v1")
 
 	r.GET("health", controllers.Ping)
 
-	process := new(controllers.Process)
-
 	// /api/v1
 	apiV1.POST("video/process", process.Video)
 	apiV1.GET("url/presigned", controllers.GetPresignedURL)
+
+	r.GET("/i/*subpath", image.Get)
 
 	return r
 }

@@ -2,9 +2,12 @@ package utils
 
 import (
 	"bytes"
+	"crypto/md5"
 	"crypto/rand"
 	"encoding/base64"
+	"encoding/hex"
 	"log"
+	"sort"
 )
 
 /*
@@ -40,4 +43,26 @@ func LogErr(err error) {
 	if err != nil {
 		log.Println(err)
 	}
+}
+
+// sortString sorts the given string
+func SortString(input string) string {
+	runes := []rune(input)
+
+	sort.Slice(runes, func(i, j int) bool {
+		return runes[i] < runes[j]
+	})
+
+	return string(runes)
+}
+
+// GetQueryHash returns the md5 hash of the query string
+func GetQueryHash(query string) string {
+	sortedQuery := SortString(query)
+
+	hasher := md5.New()
+	hasher.Write([]byte(sortedQuery))
+	hash := hex.EncodeToString(hasher.Sum(nil))
+
+	return hash
 }
