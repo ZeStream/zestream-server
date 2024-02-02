@@ -1,5 +1,8 @@
 # ZeStream Server
 
+#### To support development of ZeStream, please [![](https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&color=%23fe8e86)](https://github.com/sponsors/abskrj)
+
+
 A media streaming service, which can stream on demand video, image (with tansformations) and audio and works as CDN.
 
 ## Getting Started
