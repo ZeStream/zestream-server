@@ -3,13 +3,17 @@ package constants
 type FILE_TYPE int
 
 const (
-	Audio192K FILE_TYPE = iota
-	ImagePng
+	ImagePng FILE_TYPE = iota
 	Video5M
 	Video3M
 	Video1M
 	Video800K
 	Video400K
+)
+
+const (
+	Audio192K FILE_TYPE = iota
+	Audio128K
 )
 
 type FFMPEG_KWARGS int
@@ -52,6 +56,7 @@ const Scale = "scale"
 
 var AudioFileTypeMap = map[FILE_TYPE]string{
 	Audio192K: "_audio192k.m4a",
+	Audio128K: "_audio128k.m4a",
 }
 
 var ImageFileTypeMap = map[FILE_TYPE]string{
@@ -68,6 +73,7 @@ var VideoFileTypeMap = map[FILE_TYPE]string{
 
 var AudioBitrateMap = map[FILE_TYPE]string{
 	Audio192K: "192k",
+	Audio128K: "128k",
 }
 
 var VideoBitrateMap = map[FILE_TYPE]string{

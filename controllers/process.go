@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"zestream-server/configs"
 	"zestream-server/types"
@@ -25,6 +26,36 @@ func (*Process) Video(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
+	log.Println("request", request)
+
+	_, channel, queue, ctx, _ := configs.GetRabbitMQ()
+
+	err = utils.PublishEvent(channel, queue, *ctx, jsonBytes)
+
+	if err != nil {
+		c.JSON(http.StatusExpectationFailed, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"status": "success"})
+}
+
+func (*Process) Audio(c *gin.Context) {
+	var request types.Audio
+
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	jsonBytes, err := json.Marshal(request)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	log.Println("request", request)
 
 	_, channel, queue, ctx, _ := configs.GetRabbitMQ()
 

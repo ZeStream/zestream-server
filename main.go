@@ -19,7 +19,7 @@ func main() {
 	conn, ch, q, _, cancel := configs.InitRabbitMQ()
 
 	if *isConsumer {
-		service.VideoProcessConsumer(ch, q)
+		service.ProcessConsumer(ch, q)
 		return
 	}
 

@@ -33,6 +33,7 @@ func Init() *gin.Engine {
 
 	// /api/v1
 	apiV1.POST("video/process", process.Video)
+	apiV1.POST("audio/process", process.Audio)
 	apiV1.GET("url/presigned", controllers.GetPresignedURL)
 
 	r.GET("/i/*subpath", image.Get)
